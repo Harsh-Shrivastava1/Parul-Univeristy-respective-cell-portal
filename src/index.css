@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── shadcn/ui light theme ── */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Blue primary */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 214 100% 97%;
+    --accent-foreground: 217 91% 40%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.625rem;
+
+    /* ── Brand palette ── */
+    --blue-50: #eff6ff;
+    --blue-100: #dbeafe;
+    --blue-200: #bfdbfe;
+    --blue-500: #3b82f6;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-600: #475569;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-slate-50 text-foreground font-sans antialiased;
+    min-height: 100vh;
+  }
+  html { scroll-behavior: smooth; }
+}
+
+@layer utilities {
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb { background: #bfdbfe; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+}
+
+@layer components {
+  /* ── Page wrapper ── */
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6;
+  }
+  .page-title {
+    @apply text-xl font-bold text-slate-900;
+  }
+  .page-subtitle {
+    @apply text-sm text-slate-500 mt-0.5;
+  }
+
+  /* ── Status Badges ── */
+  .badge-pending        { @apply bg-amber-50   text-amber-700   border border-amber-200  text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-shortlisted    { @apply bg-blue-50    text-blue-700    border border-blue-200   text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-assigned       { @apply bg-violet-50  text-violet-700  border border-violet-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-active         { @apply bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-completed      { @apply bg-green-50   text-green-700   border border-green-200  text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-confirmed      { @apply bg-teal-50    text-teal-700    border border-teal-200   text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+  .badge-rejected       { @apply bg-red-50     text-red-700     border border-red-200    text-[11px] font-semibold px-2.5 py-0.5 rounded-full; }
+
+  /* ── Sidebar Link ── */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           text-slate-600 transition-all duration-150
+           hover:text-blue-700 hover:bg-blue-50 relative;
+  }
+  .sidebar-link.active {
+    @apply text-blue-700 bg-blue-50 font-semibold;
+  }
+  .sidebar-link.active::before {
+    content: '';
+    @apply absolute left-0 top-2 bottom-2 w-0.5 bg-blue-600 rounded-full;
+  }
+
+  /* ── Stat card surface ── */
+  .stat-card {
+    @apply bg-white border border-slate-200 rounded-xl p-5 shadow-sm
+           hover:shadow-md hover:border-blue-200 transition-all duration-200;
+  }
+}
