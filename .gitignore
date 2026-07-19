@@ -23,5 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variables
-.env*
+# Environment variables (keep the committed .env.example templates)
+.env
+.env.*
+!.env.example
+!server/.env.example
+storage/documents/
+server/node_modules/

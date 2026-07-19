@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# Parul University — Coordinator (Respective Cell) Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The coordinator-facing application of the four-portal Internship Management
+System (Student · Coordinator · TEC Cell · Admin), all sharing one MongoDB
+database (`parul_internship_system`).
 
-Currently, two official plugins are available:
+Cell coordinators manage assigned students' **training**: assign mentor/module/
+schedule/location, start training, record evaluations, complete training, and
+generate the Attendance Form.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Frontend:** Vite + React 19 + TypeScript (`src/`)
+- **Backend:** Node + Express + Mongoose (`server/`, port 5001)
+- **Auth:** JWT in httpOnly cookies
 
-## React Compiler
+## Status
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Feature-complete and frozen.** No further feature development — only bug
+fixes, dependency updates, and maintenance.
 
-## Expanding the Oxlint configuration
+## Quick start
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
 ```
+# Backend
+cd server && npm install && cp .env.example .env   # set MONGODB_URI + JWT secrets
+npm run dev                                          # http://localhost:5001
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+# Frontend
+cd .. && npm install && npm run dev
+```
+Coordinator accounts are provisioned by the Admin Portal (users, role
+'coordinator', linked to a cell) — there is no self-registration.
+
+## Documentation
+
+| Doc | Contents |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Overview, responsibilities, ownership, flows, folder structure, deployment |
+| [docs/API.md](docs/API.md) | Every endpoint: method, route, auth, owner, request/response |
+| [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) | Every environment variable |
+| [docs/DATABASE.md](docs/DATABASE.md) | Collections, indexes, relationships, event sync |
+| [docs/SECURITY.md](docs/SECURITY.md) | Auth, authorization, rate limiting, validation, headers, cookies, audit, residual risks |
+| [docs/MAINTENANCE.md](docs/MAINTENANCE.md) | Deferred work, cross-portal assumptions, limitations, technical debt |

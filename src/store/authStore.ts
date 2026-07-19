@@ -8,8 +8,6 @@ interface AuthStore {
   clearSession: () => void;
   isAuthenticated: () => boolean;
   getCellId: () => CellId | null;
-  getUserId: () => string | null;
-  getDepartment: () => string | null;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -29,18 +27,6 @@ export const useAuthStore = create<AuthStore>()(
       getCellId: () => {
         const s = get().session;
         return s ? s.cellId : null;
-      },
-
-      /** Returns the MongoDB _id of the authenticated user */
-      getUserId: () => {
-        const s = get().session;
-        return s?.userId ?? null;
-      },
-
-      /** Returns the department from the users collection (stored in JWT) */
-      getDepartment: () => {
-        const s = get().session;
-        return s?.department ?? null;
       },
     }),
     {

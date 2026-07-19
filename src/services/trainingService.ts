@@ -1,6 +1,5 @@
 import type { Training } from '@/types';
-import { MOCK_TRAININGS } from '@/mock/db';
-import emailService from './emailService';
+import { api } from '@/lib/apiClient';
 
 export interface StartTrainingPayload {
   applicationId: string;
@@ -15,57 +14,44 @@ export interface StartTrainingPayload {
   duration: number;
 }
 
+/**
+ * Thin client for the Coordinator-owned trainings collection. Emails /
+ * notifications and the cross-portal application-status projection are handled
+ * server-side (the training document state change is the business event).
+ */
 const trainingService = {
   getTrainingsByCell: async (): Promise<Training[]> => {
-    return Promise.resolve([...MOCK_TRAININGS]);
+    return api.get<Training[]>('/me/trainings');
   },
 
   getActiveTrainings: async (): Promise<Training[]> => {
-    return Promise.resolve(MOCK_TRAININGS.filter(t => t.status === 'ACTIVE'));
+    const all = await trainingService.getTrainingsByCell();
+    return all.filter((t) => t.status === 'ACTIVE');
   },
 
   getCompletedTrainings: async (): Promise<Training[]> => {
-    return Promise.resolve(MOCK_TRAININGS.filter(t => t.status === 'COMPLETED'));
+    const all = await trainingService.getTrainingsByCell();
+    return all.filter((t) => t.status === 'COMPLETED');
   },
 
   getTrainingByApplicationId: async (applicationId: string): Promise<Training | null> => {
-    const training = MOCK_TRAININGS.find(t => t.applicationId === applicationId);
-    return Promise.resolve(training || null);
+    const all = await trainingService.getTrainingsByCell();
+    return all.find((t) => t.applicationId === applicationId) || null;
   },
 
   getTrainingByStudentId: async (studentId: string): Promise<Training | null> => {
-    const training = MOCK_TRAININGS.find(t => t.studentId === studentId);
-    return Promise.resolve(training || null);
+    const all = await trainingService.getTrainingsByCell();
+    return all.find((t) => t.studentId === studentId) || null;
   },
 
   startTraining: async (payload: StartTrainingPayload): Promise<Training | null> => {
-    const newTraining: Training = {
-      ...payload,
-      trainingId: `TRN${Math.floor(Math.random() * 1000)}`,
-      status: 'ACTIVE'
-    };
-    MOCK_TRAININGS.push(newTraining);
-    
-    // Trigger mock email
-    await emailService.sendTrainingStartedEmail(`${payload.studentId}@example.com`);
-    
-    return Promise.resolve(newTraining);
+    return api.post<Training>('/trainings', payload);
   },
 
   completeTraining: async (trainingId: string): Promise<boolean> => {
-    const training = MOCK_TRAININGS.find(t => t.trainingId === trainingId);
-    if (training) {
-      training.status = 'COMPLETED';
-      // Trigger mock email to TEC and Admin
-      await emailService.sendTrainingCompletedEmail(
-        `${training.studentId}@example.com`,
-        'tec_cell@paruluniversity.ac.in',
-        'admin@paruluniversity.ac.in'
-      );
-      return Promise.resolve(true);
-    }
-    return Promise.resolve(false);
-  }
+    await api.post(`/trainings/${trainingId}/complete`);
+    return true;
+  },
 };
 
 export default trainingService;

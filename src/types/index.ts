@@ -18,16 +18,6 @@ export type NotificationType =
   | 'TRAINING_COMPLETION'
   | 'GENERAL';
 
-export interface Cell {
-  cellId: CellId;
-  cellName: string;
-  department: string;
-  coordinatorName: string;
-  coordinatorEmail: string;
-  coordinatorContact: string;
-  avatar?: string;
-}
-
 export interface Student {
   studentId: string;
   name: string;
@@ -101,11 +91,4 @@ export interface AuthSession {
   isAuthenticated: boolean;
   loginTime: string;
   token?: string;
-}
-
-export interface StudentWithDetails {
-  student: Student;
-  application: Application;
-  training?: Training;
-  evaluation?: Evaluation;
 }

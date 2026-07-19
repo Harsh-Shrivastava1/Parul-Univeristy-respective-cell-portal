@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/store/authStore';
 import type { AuthSession, CellId } from '@/types';
+import { api } from '@/lib/apiClient';
 
 export interface LoginCredentials {
   cellId: string;
@@ -13,32 +14,28 @@ export interface LoginResult {
   session?: AuthSession;
 }
 
-const MOCK_SESSION: AuthSession = {
-  userId: 'mock-user-123',
-  cellId: 'cse_cell',
-  cellName: 'Computer Science Engineering Cell',
-  coordinatorName: 'Jane Doe',
-  coordinatorEmail: 'jane.doe@paruluniversity.ac.in',
-  department: 'Computer Science',
-  role: 'COORDINATOR',
-  isAuthenticated: true,
-  loginTime: new Date().toISOString(),
-  token: 'mock-token-abc-123',
-};
-
+/**
+ * Coordinator authentication. Login/logout hit the real backend (JWT in
+ * httpOnly cookies); session state is mirrored in the Zustand store for the UI.
+ * Profile edits stay session-local because the `users` collection is owned by
+ * the Admin Portal (the Coordinator never writes it).
+ */
 const authService = {
   login: async (credentials: LoginCredentials): Promise<LoginResult> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    if (credentials.cellId.trim().toLowerCase() === 'admin' && credentials.password.trim() === 'password') {
-      useAuthStore.getState().setSession(MOCK_SESSION);
-      return { success: true, session: MOCK_SESSION };
+    try {
+      const session = await api.post<AuthSession>('/auth/login', {
+        cellId: credentials.cellId,
+        password: credentials.password,
+      });
+      useAuthStore.getState().setSession(session);
+      return { success: true, session };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Login failed.' };
     }
-    return { success: false, error: 'Invalid credentials. Use admin/password' };
   },
 
   logout: (): void => {
+    api.post('/auth/logout').catch(() => undefined);
     useAuthStore.getState().clearSession();
   },
 
@@ -57,7 +54,6 @@ const authService = {
   getCurrentCell: async () => {
     const session = useAuthStore.getState().session;
     if (!session) return null;
-
     return {
       cellId: session.cellId,
       cellName: session.cellName,
@@ -67,6 +63,8 @@ const authService = {
     };
   },
 
+  // Session-local only: the `users` collection is Admin-owned, so coordinator
+  // profile edits are not persisted by this portal.
   updateCoordinatorProfile: async (updates: {
     coordinatorName: string;
     coordinatorEmail: string;
@@ -75,14 +73,11 @@ const authService = {
   }) => {
     const session = useAuthStore.getState().session;
     if (!session) return;
-
     useAuthStore.getState().setSession({
       ...session,
       coordinatorName: updates.coordinatorName,
       coordinatorEmail: updates.coordinatorEmail,
     });
-    
-    // In a real app, this would hit an API.
     return Promise.resolve(true);
   },
 };
