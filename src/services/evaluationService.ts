@@ -1,25 +1,22 @@
 import type { Evaluation } from '@/types';
-import { MOCK_EVALUATIONS } from '@/mock/db';
+import { api } from '@/lib/apiClient';
 
+/** Thin client for training evaluations (embedded on the owned training). */
 const evaluationService = {
   getEvaluationsByCell: async (): Promise<Evaluation[]> => {
-    return Promise.resolve([...MOCK_EVALUATIONS]);
+    return api.get<Evaluation[]>('/me/evaluations');
   },
 
   getEvaluationByStudent: async (studentId: string): Promise<Evaluation | null> => {
-    const evaluation = MOCK_EVALUATIONS.find(e => e.studentId === studentId);
-    return Promise.resolve(evaluation || null);
+    const all = await evaluationService.getEvaluationsByCell();
+    return all.find((e) => e.studentId === studentId) || null;
   },
 
-  submitEvaluation: async (evaluation: Omit<Evaluation, 'evaluationId' | 'submittedAt'>): Promise<Evaluation | null> => {
-    const newEvaluation: Evaluation = {
-      ...evaluation,
-      evaluationId: `EVAL${Math.floor(Math.random() * 1000)}`,
-      submittedAt: new Date().toISOString()
-    };
-    MOCK_EVALUATIONS.push(newEvaluation);
-    return Promise.resolve(newEvaluation);
-  }
+  submitEvaluation: async (
+    evaluation: Omit<Evaluation, 'evaluationId' | 'submittedAt'>
+  ): Promise<Evaluation | null> => {
+    return api.post<Evaluation>(`/trainings/${evaluation.trainingId}/evaluation`, evaluation);
+  },
 };
 
 export default evaluationService;
