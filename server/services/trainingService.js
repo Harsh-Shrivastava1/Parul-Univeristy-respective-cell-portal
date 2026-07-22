@@ -52,7 +52,7 @@ async function notifyStudent(training, title, message) {
     id: genId('NT'),
     recipientId: training.studentId,
     studentId: training.studentId,
-    assignedCellId: training.assignedCellId,
+    assignedDepartment: training.assignedDepartment,
     type: 'success',
     title,
     message,
@@ -132,7 +132,7 @@ function emailStudentAboutTraining(training, template, opts = {}) {
 async function findScopedTraining(keys, trainingId) {
   const t = await Training.findOne({
     $or: [{ id: trainingId }, { trainingId }],
-    assignedCellId: { $in: keys },
+    assignedDepartment: { $in: keys },
   }).lean();
   if (!t) throw new ApiError(404, 'Training not found.');
   return t;
@@ -142,7 +142,7 @@ async function findScopedTraining(keys, trainingId) {
 
 async function listTrainings(userId) {
   const { keys } = await scope(userId);
-  return Training.find({ assignedCellId: { $in: keys } }).lean();
+  return Training.find({ assignedDepartment: { $in: keys } }).lean();
 }
 
 async function getTraining(userId, trainingId) {
@@ -165,11 +165,11 @@ async function createAndStart(userId, payload, actor) {
 
   const app = await Application.findOne({
     $or: [{ id: applicationId }, { applicationId }],
-    assignedCellId: { $in: keys },
+    assignedDepartment: { $in: keys },
   }).lean();
   if (!app) throw new ApiError(403, 'This application is not assigned to your cell.');
 
-  const existing = await Training.findOne({ applicationId, assignedCellId: { $in: keys } }).lean();
+  const existing = await Training.findOne({ applicationId, assignedDepartment: { $in: keys } }).lean();
   if (existing) throw new ApiError(409, 'A training already exists for this application.');
 
   const ts = now();
@@ -179,7 +179,7 @@ async function createAndStart(userId, payload, actor) {
     trainingId: id,
     applicationId,
     studentId,
-    assignedCellId: app.assignedCellId,
+    assignedDepartment: app.assignedDepartment,
     ...input,
     startDate: input.joiningDate,
     status: 'ACTIVE',

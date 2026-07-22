@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const schema = z.object({
-  cellId: z.string().min(1, 'Cell ID is required'),
+  cellId: z.string().email('Enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional(),
 });
@@ -83,12 +83,12 @@ const LoginPage: React.FC = () => {
           <CardContent className="p-8 sm:p-10">
             <div className="mb-8">
               <h3 className="text-[22px] font-extrabold text-slate-900 mb-2">Sign In</h3>
-              <p className="text-sm text-slate-500 font-medium">Continue to your cell portal account</p>
+              <p className="text-sm text-slate-500 font-medium">Continue to your department portal account</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="cellId" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Cell ID</Label>
+                <Label htmlFor="cellId" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email</Label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -96,7 +96,8 @@ const LoginPage: React.FC = () => {
                   <Input
                     id="cellId"
                     {...register('cellId')}
-                    placeholder="e.g. cse_cell"
+                    placeholder="coordinator@paruluniversity.ac.in"
+                    type="email"
                     className="h-11 pl-10 bg-slate-50/50 border-slate-200 focus-visible:bg-white rounded-xl text-sm"
                   />
                 </div>

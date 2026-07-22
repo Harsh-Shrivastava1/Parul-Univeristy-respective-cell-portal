@@ -128,6 +128,35 @@ const LIFECYCLE_TEMPLATES = {
       signoff(),
   }),
 
+  department_rejected: (d) => ({
+    subject: `Update on your internship — ${d.role || 'Internship'}`,
+    body:
+      greeting(d) +
+      p(`We regret to inform you that the ${d.department || 'assigned'} department has decided not to continue with your internship candidature for the position of <strong>${d.role || 'Internship'}</strong>.`) +
+      infoTable([
+        ['Position', d.role],
+        ['Department', d.department],
+        ['Reason', d.reason],
+      ]) +
+      p(`This application is now closed. You are welcome to apply to other internship opportunities on the portal.`) +
+      signoff(),
+  }),
+
+  terminated: (d) => ({
+    subject: `Internship terminated — ${d.role || 'Internship'}`,
+    body:
+      greeting(d) +
+      p(`We regret to inform you that your internship for the position of <strong>${d.role || 'Internship'}</strong>${d.department ? ` in the ${d.department} department` : ''} has been terminated.`) +
+      infoTable([
+        ['Position', d.role],
+        ['Department', d.department],
+        ['Terminated by', d.terminatedBy],
+        ['Reason', d.reason],
+      ]) +
+      p(`This application is now closed. For any clarification, please contact the Internship Cell.`) +
+      signoff(),
+  }),
+
   password_reset: (d) => ({
     subject: 'Your password has been reset',
     body:

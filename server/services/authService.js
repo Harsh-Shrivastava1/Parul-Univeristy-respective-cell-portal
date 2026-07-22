@@ -1,5 +1,4 @@
 const User = require('../models/User');
-const Cell = require('../models/Cell');
 const ApiError = require('../utils/ApiError');
 const { comparePassword } = require('../utils/auth');
 const { loadCoordinator, sessionCell } = require('../utils/identity');
@@ -25,33 +24,18 @@ function toSession(user, cell) {
 }
 
 /**
- * Coordinator login. The frontend sends a "cellId" identifier + password; it is
- * matched against an Admin-created coordinator account (users, role
- * 'coordinator') either directly by email, or via the cell login id / cell id
- * whose `coordinatorId` points to the user. Passwords are verified with bcrypt.
+ * Coordinator login — EMAIL + password against the Admin-created coordinator
+ * account (users, role 'coordinator', department = one of the 78 admin
+ * departments). The legacy cell-login is retired.
  */
 async function login(identifier, password) {
-  if (!identifier || !password) throw new ApiError(400, 'Cell ID and password are required.');
+  if (!identifier || !password) throw new ApiError(400, 'Email and password are required.');
   const id = String(identifier).trim();
 
-  // Resolve candidate coordinator user by cell identity or by email.
-  let user = null;
-  const cell = await Cell.findOne({
-    $or: [{ id }, { cellId: id }, { loginId: id }, { name: id }],
+  const user = await User.findOne({
+    role: 'coordinator',
+    email: new RegExp(`^${escapeRegex(id)}$`, 'i'),
   }).lean();
-  // Admin-owned cells carry the coordinator reference as `coordinatorId` or, in
-  // the shared schema, `officerId`. Accept either so login resolves regardless
-  // of which field the writing portal populated.
-  const coordinatorRef = cell && (cell.coordinatorId || cell.officerId);
-  if (coordinatorRef) {
-    user = await User.findOne({ id: coordinatorRef, role: 'coordinator' }).lean();
-  }
-  if (!user) {
-    user = await User.findOne({
-      role: 'coordinator',
-      email: new RegExp(`^${escapeRegex(id)}$`, 'i'),
-    }).lean();
-  }
 
   // Uniform error — never reveal which part was wrong.
   if (!user || user.isDeleted) throw new ApiError(401, 'Invalid credentials.');
@@ -61,8 +45,7 @@ async function login(identifier, password) {
   const ok = await comparePassword(String(password), user.passwordHash);
   if (!ok) throw new ApiError(401, 'Invalid credentials.');
 
-  const resolvedCell = cell || (await Cell.findOne({ coordinatorId: user.id }).lean());
-  return toSession(user, resolvedCell);
+  return toSession(user, null);
 }
 
 /** Current coordinator session (for /auth/me). */

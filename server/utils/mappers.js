@@ -29,7 +29,8 @@ function toTraining(t) {
     trainingId: t.trainingId || t.id || '',
     applicationId: t.applicationId || '',
     studentId: t.studentId || '',
-    assignedCellId: t.assignedCellId || '',
+    assignedCellId: t.assignedDepartment || t.assignedCellId || '',
+    assignedDepartment: t.assignedDepartment || '',
     mentorName: t.mentorName || '',
     companySupervisor: t.companySupervisor || '',
     trainingModule: t.trainingModule || '',
@@ -41,8 +42,15 @@ function toTraining(t) {
   };
 }
 
-// Derive the coordinator-facing application status from the owned training.
-function deriveStatus(training) {
+// Derive the coordinator-facing application status. Late/terminal raw statuses
+// (owned by TEC or by the department's own reject/terminate commands) take
+// precedence; otherwise it follows the owned training's state.
+function deriveStatus(training, app) {
+  const raw = app && String(app.status || '');
+  if (raw === 'Rejected by Department') return 'REJECTED';
+  if (raw === 'Terminated') return 'TERMINATED';
+  if (raw === 'Joined') return 'JOINED';
+  if (raw === 'Ready To Join') return 'READY_TO_JOIN';
   const s = training && String(training.status || '').toUpperCase();
   if (s === 'COMPLETED') return 'TRAINING_COMPLETED';
   if (s === 'ACTIVE') return 'TRAINING_ACTIVE';
@@ -54,8 +62,9 @@ function toApplication(app, training) {
   return {
     applicationId: app.id || app.applicationId || '',
     studentId: app.studentId || app.userId || '',
-    assignedCellId: app.assignedCellId || '',
-    status: deriveStatus(training),
+    assignedCellId: app.assignedDepartment || app.assignedCellId || '',
+    assignedDepartment: app.assignedDepartment || '',
+    status: deriveStatus(training, app),
     assignedDate: app.assignedDate || app.appliedDate || app.createdAt || '',
   };
 }
@@ -82,7 +91,7 @@ function toEvaluation(t) {
 function toNotification(n, cellId) {
   return {
     notificationId: n.id || n.notificationId || '',
-    assignedCellId: n.assignedCellId || cellId || '',
+    assignedCellId: n.assignedDepartment || n.assignedCellId || cellId || '',
     type: n.type || 'GENERAL',
     title: n.title || '',
     message: n.message || '',

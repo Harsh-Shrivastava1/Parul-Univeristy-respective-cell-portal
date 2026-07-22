@@ -13,7 +13,8 @@ const trainingSchema = new Schema(
     trainingId: { type: String, index: true },
     applicationId: { type: String, index: true },
     studentId: { type: String, index: true },
-    assignedCellId: { type: String, index: true },
+    assignedCellId: { type: String, index: true }, // legacy
+    assignedDepartment: { type: String, index: true },
 
     mentorName: { type: String, default: '' },
     companySupervisor: { type: String, default: '' },
@@ -46,6 +47,6 @@ const trainingSchema = new Schema(
   },
   { versionKey: false, strict: false }
 );
-trainingSchema.index({ assignedCellId: 1, status: 1 });
+trainingSchema.index({ assignedDepartment: 1, status: 1 });
 
 module.exports = models.Training || model('Training', trainingSchema, 'trainings');

@@ -18,17 +18,19 @@ function issueSession(res, session) {
   res.cookie(REFRESH_COOKIE, signRefresh(claims), { ...cookieOptions, maxAge: REFRESH_MAX_AGE });
 }
 
-// POST /api/auth/login  (public, rate-limited)
+// POST /api/auth/login  (public, rate-limited) — coordinator email + password.
+// Accepts `email` (current) or the legacy `cellId` body key as the identifier.
 const login = asyncHandler(async (req, res) => {
-  const { cellId, password } = req.body || {};
+  const { email, cellId, password } = req.body || {};
+  const identifier = email || cellId;
   const ip = clientIp(req);
   try {
-    const session = await authService.login(cellId, password);
+    const session = await authService.login(identifier, password);
     issueSession(res, session);
     await recordAudit({ action: 'AUTH_LOGIN', userId: session.userId, userName: session.coordinatorName, entity: 'auth', entityId: session.userId, ip });
     res.json({ success: true, data: session });
   } catch (err) {
-    await recordAudit({ action: 'AUTH_LOGIN_FAILED', entity: 'auth', ip, meta: { cellId: typeof cellId === 'string' ? cellId.slice(0, 40) : null } });
+    await recordAudit({ action: 'AUTH_LOGIN_FAILED', entity: 'auth', ip, meta: { email: typeof identifier === 'string' ? identifier.slice(0, 40) : null } });
     throw err;
   }
 });
