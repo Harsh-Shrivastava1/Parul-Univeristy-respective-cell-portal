@@ -14,6 +14,11 @@ import { formatDate } from '@/lib/utils';
 import type { Student, Application, Training, Evaluation } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 const StudentDetailPage: React.FC = () => {
   const { studentId } = useParams();
@@ -24,6 +29,32 @@ const StudentDetailPage: React.FC = () => {
   const [training, setTraining] = useState<Training | null>(null);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(true);
+  // Reject (before join) / Terminate (after join) — reason mandatory.
+  const [actionOpen, setActionOpen] = useState<null | 'reject' | 'terminate'>(null);
+  const [actionReason, setActionReason] = useState('');
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const runAction = async () => {
+    if (!application || !actionOpen || actionReason.trim().length < 3) return;
+    setActionBusy(true);
+    setActionError(null);
+    try {
+      if (actionOpen === 'reject') {
+        await applicationService.rejectStudent(application.applicationId, actionReason.trim());
+        setApplication({ ...application, status: 'REJECTED' as Application['status'] });
+      } else {
+        await applicationService.terminateStudent(application.applicationId, actionReason.trim());
+        setApplication({ ...application, status: 'TERMINATED' as Application['status'] });
+      }
+      setActionOpen(null);
+      setActionReason('');
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Action failed.');
+    } finally {
+      setActionBusy(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,8 +145,63 @@ const StudentDetailPage: React.FC = () => {
               <Star size={16} className="text-indigo-600" /> View Evaluation
             </Button>
           )}
+
+          {/* Department reject — allowed any time BEFORE the student joins. */}
+          {['ASSIGNED', 'TRAINING_ACTIVE', 'TRAINING_COMPLETED'].includes(String(application.status)) && (
+            <Button
+              variant="outline"
+              onClick={() => setActionOpen('reject')}
+              className="gap-2 bg-white shadow-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              Reject Student
+            </Button>
+          )}
+          {/* Terminate — only after the student has JOINED the internship. */}
+          {String(application.status) === 'JOINED' && (
+            <Button
+              onClick={() => setActionOpen('terminate')}
+              className="gap-2 bg-red-600 hover:bg-red-700 text-white shadow-sm border-0"
+            >
+              Terminate Internship
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Reason dialog for Reject / Terminate */}
+      <Dialog open={!!actionOpen} onOpenChange={(o) => { if (!o) { setActionOpen(null); setActionReason(''); setActionError(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{actionOpen === 'terminate' ? 'Terminate Internship' : 'Reject Student'}</DialogTitle>
+            <DialogDescription>
+              {actionOpen === 'terminate'
+                ? 'This permanently closes the internship. The student, TEC and this department are notified.'
+                : 'This closes the application (the student can still apply to other internships). The student and TEC are notified.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="action-reason">Reason *</Label>
+            <Textarea
+              id="action-reason"
+              value={actionReason}
+              onChange={(e) => setActionReason(e.target.value)}
+              placeholder="State the reason (required)…"
+              rows={3}
+            />
+            {actionError && <p className="text-xs text-red-600">{actionError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setActionOpen(null); setActionReason(''); }}>Cancel</Button>
+            <Button
+              onClick={runAction}
+              disabled={actionBusy || actionReason.trim().length < 3}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {actionBusy ? 'Please wait…' : actionOpen === 'terminate' ? 'Terminate' : 'Reject'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Column - Student Profile */}

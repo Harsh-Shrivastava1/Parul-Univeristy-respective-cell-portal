@@ -9,7 +9,7 @@ const { toStudent, toApplication } = require('../utils/mappers');
 /** Applications assigned to the coordinator's cell + their trainings. */
 async function loadCellApplications(userId) {
   const { keys } = await scope(userId);
-  const apps = await Application.find({ assignedCellId: { $in: keys } }).lean();
+  const apps = await Application.find({ assignedDepartment: { $in: keys } }).lean();
   const appIds = apps.map((a) => a.id || a.applicationId).filter(Boolean);
   const trainings = appIds.length
     ? await Training.find({ applicationId: { $in: appIds } }).lean()

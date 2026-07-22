@@ -24,7 +24,9 @@ const authService = {
   login: async (credentials: LoginCredentials): Promise<LoginResult> => {
     try {
       const session = await api.post<AuthSession>('/auth/login', {
-        cellId: credentials.cellId,
+        // Department-based auth: the identifier is the coordinator's EMAIL
+        // (field name kept as cellId in the form for minimal churn).
+        email: credentials.cellId,
         password: credentials.password,
       });
       useAuthStore.getState().setSession(session);

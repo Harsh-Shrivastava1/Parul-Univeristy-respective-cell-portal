@@ -26,6 +26,19 @@ const applicationService = {
   updateApplicationStatus: async (_applicationId: string, _status: ApplicationStatus): Promise<boolean> => {
     return Promise.resolve(true);
   },
+
+  /**
+   * Department command-writes (sanctioned exceptions): reject a student before
+   * they join, or terminate after joining. Reason is mandatory; the student and
+   * TEC are notified by the backend.
+   */
+  rejectStudent: async (applicationId: string, reason: string): Promise<void> => {
+    await api.post(`/me/applications/${applicationId}/reject`, { reason });
+  },
+
+  terminateStudent: async (applicationId: string, reason: string): Promise<void> => {
+    await api.post(`/me/applications/${applicationId}/terminate`, { reason });
+  },
 };
 
 export default applicationService;
