@@ -29,8 +29,8 @@ const StudentDetailPage: React.FC = () => {
   const [training, setTraining] = useState<Training | null>(null);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(true);
-  // Reject (before join) / Terminate (after join) — reason mandatory.
-  const [actionOpen, setActionOpen] = useState<null | 'reject' | 'terminate'>(null);
+  // Reject (before join) / Terminate / Complete (after join) — text mandatory.
+  const [actionOpen, setActionOpen] = useState<null | 'reject' | 'terminate' | 'complete'>(null);
   const [actionReason, setActionReason] = useState('');
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -43,6 +43,9 @@ const StudentDetailPage: React.FC = () => {
       if (actionOpen === 'reject') {
         await applicationService.rejectStudent(application.applicationId, actionReason.trim());
         setApplication({ ...application, status: 'REJECTED' as Application['status'] });
+      } else if (actionOpen === 'complete') {
+        await applicationService.completeInternship(application.applicationId, actionReason.trim());
+        setApplication({ ...application, status: 'INTERNSHIP_COMPLETED' as Application['status'] });
       } else {
         await applicationService.terminateStudent(application.applicationId, actionReason.trim());
         setApplication({ ...application, status: 'TERMINATED' as Application['status'] });
@@ -156,14 +159,22 @@ const StudentDetailPage: React.FC = () => {
               Reject Student
             </Button>
           )}
-          {/* Terminate — only after the student has JOINED the internship. */}
+          {/* After JOIN: Complete (success path) or Terminate. */}
           {String(application.status) === 'JOINED' && (
-            <Button
-              onClick={() => setActionOpen('terminate')}
-              className="gap-2 bg-red-600 hover:bg-red-700 text-white shadow-sm border-0"
-            >
-              Terminate Internship
-            </Button>
+            <>
+              <Button
+                onClick={() => setActionOpen('complete')}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm border-0"
+              >
+                Complete Internship
+              </Button>
+              <Button
+                onClick={() => setActionOpen('terminate')}
+                className="gap-2 bg-red-600 hover:bg-red-700 text-white shadow-sm border-0"
+              >
+                Terminate Internship
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -172,20 +183,24 @@ const StudentDetailPage: React.FC = () => {
       <Dialog open={!!actionOpen} onOpenChange={(o) => { if (!o) { setActionOpen(null); setActionReason(''); setActionError(null); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{actionOpen === 'terminate' ? 'Terminate Internship' : 'Reject Student'}</DialogTitle>
+            <DialogTitle>
+              {actionOpen === 'terminate' ? 'Terminate Internship' : actionOpen === 'complete' ? 'Complete Internship' : 'Reject Student'}
+            </DialogTitle>
             <DialogDescription>
               {actionOpen === 'terminate'
                 ? 'This permanently closes the internship. The student, TEC and this department are notified.'
-                : 'This closes the application (the student can still apply to other internships). The student and TEC are notified.'}
+                : actionOpen === 'complete'
+                  ? 'Marks the internship as successfully completed. The student and TEC are notified. The certificate is issued physically by the Internship Cell office.'
+                  : 'This closes the application (the student can still apply to other internships). The student and TEC are notified.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label htmlFor="action-reason">Reason *</Label>
+            <Label htmlFor="action-reason">{actionOpen === 'complete' ? 'Remarks *' : 'Reason *'}</Label>
             <Textarea
               id="action-reason"
               value={actionReason}
               onChange={(e) => setActionReason(e.target.value)}
-              placeholder="State the reason (required)…"
+              placeholder={actionOpen === 'complete' ? 'Performance summary, final feedback (required)…' : 'State the reason (required)…'}
               rows={3}
             />
             {actionError && <p className="text-xs text-red-600">{actionError}</p>}
@@ -195,9 +210,9 @@ const StudentDetailPage: React.FC = () => {
             <Button
               onClick={runAction}
               disabled={actionBusy || actionReason.trim().length < 3}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className={actionOpen === 'complete' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}
             >
-              {actionBusy ? 'Please wait…' : actionOpen === 'terminate' ? 'Terminate' : 'Reject'}
+              {actionBusy ? 'Please wait…' : actionOpen === 'terminate' ? 'Terminate' : actionOpen === 'complete' ? 'Complete Internship' : 'Reject'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -16,6 +16,8 @@ function toSession(user, cell) {
     cellName: sc.cellName,
     coordinatorName: user.name || '',
     coordinatorEmail: user.email || '',
+    // Phone captured by Admin at account creation (users.phone).
+    coordinatorContact: user.phone || '',
     department: sc.department,
     role: 'coordinator',
     isAuthenticated: true,

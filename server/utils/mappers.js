@@ -49,6 +49,7 @@ function deriveStatus(training, app) {
   const raw = app && String(app.status || '');
   if (raw === 'Rejected by Department') return 'REJECTED';
   if (raw === 'Terminated') return 'TERMINATED';
+  if (raw === 'Internship Completed') return 'INTERNSHIP_COMPLETED';
   if (raw === 'Joined') return 'JOINED';
   if (raw === 'Ready To Join') return 'READY_TO_JOIN';
   const s = training && String(training.status || '').toUpperCase();

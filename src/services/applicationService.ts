@@ -39,6 +39,11 @@ const applicationService = {
   terminateStudent: async (applicationId: string, reason: string): Promise<void> => {
     await api.post(`/me/applications/${applicationId}/terminate`, { reason });
   },
+
+  /** Mark a JOINED internship as successfully completed (remarks mandatory). */
+  completeInternship: async (applicationId: string, remarks: string): Promise<void> => {
+    await api.post(`/me/applications/${applicationId}/complete-internship`, { remarks });
+  },
 };
 
 export default applicationService;

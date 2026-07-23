@@ -194,4 +194,58 @@ const terminate = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { status: 'Terminated' } });
 });
 
-module.exports = { reject, terminate };
+// POST /api/me/applications/:id/complete-internship  { remarks }
+// Third sanctioned command-write: mark a JOINED internship as successfully
+// completed. Whichever side (TEC or department) completes first, the student,
+// TEC and the coordinator are all informed. Certificate is issued PHYSICALLY
+// by the TEC office — no digital issuance.
+const completeInternship = asyncHandler(async (req, res) => {
+  const remarks = String((req.body || {}).remarks || '').trim();
+  if (remarks.length < 3) throw new ApiError(400, 'Completion remarks are required.');
+
+  const { user, app } = await loadScopedApplication(req.user.sub, req.params.id);
+  if (app.status === 'Internship Completed') return res.json({ success: true, data: { status: app.status } });
+  if (app.status !== 'Joined') {
+    throw new ApiError(400, `Only joined internships can be marked completed (current status: ${app.status}).`);
+  }
+
+  const ts = now();
+  const internshipCompletion = { remarks, completedAt: ts, completedBy: user.id, byRole: 'coordinator', byDepartment: user.department };
+  await Application.updateOne(
+    { id: app.id },
+    {
+      $set: { status: 'Internship Completed', internshipCompletion, updatedAt: ts },
+      $push: {
+        timeline: timelineEntry(
+          'internship_completed',
+          'Internship Completed',
+          `Internship completed — marked by ${user.department}. Remarks: ${remarks}`,
+          user.id,
+          remarks,
+          app.status,
+          'Internship Completed',
+        ),
+      },
+    },
+  );
+
+  await recordAudit({
+    action: 'APPLICATION_INTERNSHIP_COMPLETED',
+    userId: user.id,
+    userName: user.name,
+    entity: 'application',
+    entityId: app.id,
+    ip: clientIp(req),
+    meta: { remarks, department: user.department },
+  });
+  await notifyStudentDoc(app, 'Internship completed', `Congratulations! Your internship was marked completed by the ${user.department} department. Collect your certificate from the Internship Cell office.`);
+  await notifyTec('Internship completed', `${app.studentName}'s internship was marked completed by ${user.department}. Remarks: ${remarks}`, app.id);
+
+  const data = { name: app.studentName, role: app.advertisementTitle, department: user.department, completedBy: user.department, remarks };
+  sendTemplateEmail({ to: app.email, toName: app.studentName, template: 'internship_completed', data }).catch(() => {});
+  sendTemplateEmail({ to: TEC_INBOX, toName: 'Internship Cell', template: 'internship_completed', data: { ...data, name: 'Internship Cell' } }).catch(() => {});
+
+  res.json({ success: true, data: { status: 'Internship Completed' } });
+});
+
+module.exports = { reject, terminate, completeInternship };
