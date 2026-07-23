@@ -86,6 +86,8 @@ export interface AuthSession {
   cellName: string;
   coordinatorName: string;
   coordinatorEmail: string;
+  /** Phone captured by Admin at account creation. */
+  coordinatorContact?: string;
   department?: string;
   role?: string;
   isAuthenticated: boolean;

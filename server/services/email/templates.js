@@ -157,6 +157,22 @@ const LIFECYCLE_TEMPLATES = {
       signoff(),
   }),
 
+  internship_completed: (d) => ({
+    subject: `Internship completed — ${d.role || 'Internship'}`,
+    body:
+      greeting(d) +
+      p(`Congratulations! The internship for the position of <strong>${d.role || 'Internship'}</strong>${d.department ? ` in the ${d.department} department` : ''} has been successfully completed.`) +
+      infoTable([
+        ['Student', d.name],
+        ['Position', d.role],
+        ['Department', d.department],
+        ['Completed by', d.completedBy],
+        ['Remarks', d.remarks],
+      ]) +
+      p(`The completion certificate will be issued physically by the Internship Cell office.`) +
+      signoff(),
+  }),
+
   password_reset: (d) => ({
     subject: 'Your password has been reset',
     body:

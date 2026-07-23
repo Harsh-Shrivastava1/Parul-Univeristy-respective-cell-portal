@@ -61,6 +61,7 @@ const authService = {
       cellName: session.cellName,
       coordinatorName: session.coordinatorName,
       coordinatorEmail: session.coordinatorEmail,
+      coordinatorContact: (session as { coordinatorContact?: string }).coordinatorContact ?? '',
       department: session.department ?? session.cellName,
     };
   },
