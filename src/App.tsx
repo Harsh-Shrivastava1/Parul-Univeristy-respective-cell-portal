@@ -14,6 +14,7 @@ const StartTrainingPage = lazy(() => import("@/pages/StartTrainingPage"));
 const EvaluationPage = lazy(() => import("@/pages/EvaluationPage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
+const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-64">
@@ -61,6 +62,7 @@ function App() {
             <Route path="/training-completion" element={<TrainingCompletionPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/change-password" element={<ChangePasswordPage />} />
           </Route>
 
           {/* 404 */}

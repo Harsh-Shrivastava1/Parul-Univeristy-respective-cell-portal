@@ -41,6 +41,17 @@ const authService = {
     useAuthStore.getState().clearSession();
   },
 
+  // Self-service password change for the logged-in coordinator. Verifies the
+  // current password server-side before setting the new one.
+  changePassword: async (currentPassword: string, newPassword: string): Promise<LoginResult> => {
+    try {
+      await api.post('/auth/change-password', { currentPassword, newPassword });
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Password change failed.' };
+    }
+  },
+
   getSession: (): AuthSession | null => {
     return useAuthStore.getState().session;
   },

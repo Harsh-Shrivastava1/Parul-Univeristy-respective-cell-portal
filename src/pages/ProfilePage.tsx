@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -206,10 +207,19 @@ const ProfilePage: React.FC = () => {
                 <Lock size={18} className="text-slate-400" /> Security Settings
               </h3>
               
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p className="text-sm font-medium text-amber-800">
-                  Password changes are managed by the Super Admin. Please contact your administrator to reset your cell password.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div>
+                  <p className="text-sm font-bold text-blue-900">Password</p>
+                  <p className="text-xs font-medium text-blue-700 mt-0.5">
+                    Change the password you use to sign in to this portal.
+                  </p>
+                </div>
+                <Link
+                  to="/change-password"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 transition-colors flex-shrink-0"
+                >
+                  <Lock size={15} /> Change Password
+                </Link>
               </div>
               
               <div className="space-y-1">

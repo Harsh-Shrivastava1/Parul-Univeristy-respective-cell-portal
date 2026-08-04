@@ -7,6 +7,12 @@ async function comparePassword(plain, hash) {
   return bcrypt.compare(plain, hash);
 }
 
+// Bcrypt-hash a new password using the shared cost factor (12 rounds — matches
+// the Admin Portal so hashes are interchangeable across portals).
+async function hashPassword(plain) {
+  return bcrypt.hash(String(plain), env.bcryptRounds || 12);
+}
+
 function signAccess(claims) {
   return jwt.sign(claims, env.jwt.accessSecret, { expiresIn: env.jwt.accessTtl });
 }
@@ -23,4 +29,4 @@ function verifyRefresh(token) {
   return jwt.verify(token, env.jwt.refreshSecret);
 }
 
-module.exports = { comparePassword, signAccess, signRefresh, verifyAccess, verifyRefresh };
+module.exports = { comparePassword, hashPassword, signAccess, signRefresh, verifyAccess, verifyRefresh };

@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
-const { comparePassword } = require('../utils/auth');
+const { comparePassword, hashPassword } = require('../utils/auth');
 const { loadCoordinator, sessionCell } = require('../utils/identity');
 
 function escapeRegex(s) {
@@ -56,4 +56,43 @@ async function getProfile(userId) {
   return toSession(user, cell);
 }
 
-module.exports = { login, getProfile, toSession };
+/**
+ * Self-service password change for the authenticated coordinator.
+ *
+ * This is a DELIBERATE, self-scoped write into the Admin-owned `users`
+ * collection: it only ever touches the caller's OWN document and only the
+ * `passwordHash` field, so it can't race the Admin Portal's ownership of user
+ * records. Requires the current password (verified against the stored hash)
+ * before setting the new one.
+ */
+async function changePassword(userId, currentPassword, newPassword) {
+  if (!currentPassword || !newPassword) {
+    throw new ApiError(400, 'Current and new password are required.');
+  }
+  const next = String(newPassword);
+  if (next.length < 8) {
+    throw new ApiError(400, 'New password must be at least 8 characters.');
+  }
+
+  const user = await User.findOne({ id: userId, role: 'coordinator' }).lean();
+  if (!user || user.isDeleted) throw new ApiError(404, 'Coordinator account not found.');
+  if (user.status && user.status !== 'active') {
+    throw new ApiError(403, 'Your account has been deactivated. Contact administration.');
+  }
+
+  const ok = await comparePassword(String(currentPassword), user.passwordHash);
+  if (!ok) throw new ApiError(401, 'Current password is incorrect.');
+
+  if (await comparePassword(next, user.passwordHash)) {
+    throw new ApiError(400, 'New password must be different from the current password.');
+  }
+
+  const passwordHash = await hashPassword(next);
+  await User.updateOne(
+    { id: userId, role: 'coordinator' },
+    { $set: { passwordHash, updatedAt: new Date() } }
+  );
+  return { userId, name: user.name || '' };
+}
+
+module.exports = { login, getProfile, changePassword, toSession };
