@@ -56,6 +56,21 @@ const me = asyncHandler(async (req, res) => {
   res.json({ success: true, data: session });
 });
 
+// POST /api/auth/change-password  (coordinator, rate-limited)
+// Verifies the current password, then updates the coordinator's own passwordHash.
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  const ip = clientIp(req);
+  try {
+    const result = await authService.changePassword(req.user.sub, currentPassword, newPassword);
+    await recordAudit({ action: 'AUTH_PASSWORD_CHANGE', userId: result.userId, userName: result.name, entity: 'auth', entityId: result.userId, ip });
+    res.json({ success: true, data: { changed: true } });
+  } catch (err) {
+    await recordAudit({ action: 'AUTH_PASSWORD_CHANGE_FAILED', userId: req.user?.sub, userName: req.user?.name, entity: 'auth', entityId: req.user?.sub, ip });
+    throw err;
+  }
+});
+
 // POST /api/auth/logout  (coordinator)
 const logout = asyncHandler(async (req, res) => {
   res.clearCookie(ACCESS_COOKIE, cookieOptions);
@@ -64,4 +79,4 @@ const logout = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
-module.exports = { login, refresh, me, logout };
+module.exports = { login, refresh, me, changePassword, logout };

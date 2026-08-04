@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, GraduationCap, ClipboardList,
   CheckCircle, Star, Bell, BarChart3, UserCircle, LogOut, ChevronLeft,
-  ChevronRight, Building2, X
+  ChevronRight, Building2, X, KeyRound
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import authService from '@/services/authService';
@@ -22,6 +22,7 @@ const navItems = [
   { path: '/completion',         icon: ClipboardList,   label: 'Training Completion' },
   { path: '/notifications',      icon: Bell,            label: 'Notifications' },
   { path: '/profile',            icon: UserCircle,      label: 'Profile' },
+  { path: '/change-password',    icon: KeyRound,        label: 'Change Password' },
 ];
 
 interface SidebarProps {
