@@ -144,7 +144,7 @@ const StudentDetailPage: React.FC = () => {
           )}
 
           {application.status === 'TRAINING_COMPLETED' && (
-            <Button onClick={() => navigate(`/students/${studentId}/evaluation`)} variant="outline" className="gap-2 bg-white shadow-sm border-slate-200">
+            <Button onClick={() => navigate(`/students/${studentId}/evaluate`)} variant="outline" className="gap-2 bg-white shadow-sm border-slate-200">
               <Star size={16} className="text-indigo-600" /> View Evaluation
             </Button>
           )}
