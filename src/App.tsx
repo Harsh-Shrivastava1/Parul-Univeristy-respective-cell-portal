@@ -6,6 +6,7 @@ import MainLayout from "@/components/layout/MainLayout";
 // Lazy-loaded pages
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const TrainingCompletionPage = lazy(() => import("@/pages/TrainingCompletionPage"));
 const AssignedStudentsPage = lazy(() => import("@/pages/AssignedStudentsPage"));
 const StudentDetailPage = lazy(() => import("@/pages/StudentDetailPage"));
 const StartTrainingPage = lazy(() => import("@/pages/StartTrainingPage"));
@@ -51,7 +52,13 @@ function App() {
               path="/students/:studentId/evaluate"
               element={<EvaluationPage />}
             />
+            <Route
+              path="/students/:studentId/evaluation"
+              element={<EvaluationPage />}
+            />
 
+            <Route path="/completion" element={<TrainingCompletionPage />} />
+            <Route path="/training-completion" element={<TrainingCompletionPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
