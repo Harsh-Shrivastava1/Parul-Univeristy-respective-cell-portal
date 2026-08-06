@@ -34,7 +34,7 @@ const StartTrainingPage: React.FC = () => {
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema as any),
     defaultValues: {
       joiningDate: new Date().toISOString().split('T')[0],
@@ -54,9 +54,16 @@ const StartTrainingPage: React.FC = () => {
         const stud = await studentService.getStudentById(studentId);
         const apps = await applicationService.getApplicationsByCell();
         const app = apps.find(a => a.studentId === studentId) || null;
-        
+
         setStudent(stud);
         setApplication(app);
+
+        // Pre-fill the mentor if one was already set via bulk assignment, so it
+        // isn't typed twice (the field stays editable).
+        if (app) {
+          const existing = await trainingService.getTrainingByApplicationId(app.applicationId);
+          if (existing?.mentorName) setValue('mentorName', existing.mentorName);
+        }
       } catch (err) {
         console.error(err);
       } finally {
