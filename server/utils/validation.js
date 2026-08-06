@@ -35,7 +35,6 @@ function validateTrainingInput(body, { partial = false } = {}) {
     out[key] = required ? reqStr(b[key], label, max) : ensureMax(trim(b[key]) || '', max, label);
   };
   set('mentorName', 'Mentor name', MAX.name, true);
-  set('companySupervisor', 'Company supervisor', MAX.name, false);
   set('trainingModule', 'Training module', MAX.module, true);
   set('reportingLocation', 'Reporting location', MAX.location, true);
   set('joiningDate', 'Joining date', MAX.time, true);

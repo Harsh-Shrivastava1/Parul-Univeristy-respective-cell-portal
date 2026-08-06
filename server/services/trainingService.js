@@ -170,9 +170,30 @@ async function createAndStart(userId, payload, actor) {
   if (!app) throw new ApiError(403, 'This application is not assigned to your cell.');
 
   const existing = await Training.findOne({ applicationId, assignedDepartment: { $in: keys } }).lean();
-  if (existing) throw new ApiError(409, 'A training already exists for this application.');
+  // A mentor-only ASSIGNED training (created via bulk mentor assignment) is fine
+  // to upgrade to a full, started training. Only an already-started/completed one
+  // is a genuine conflict.
+  if (existing && String(existing.status || '').toUpperCase() !== 'ASSIGNED') {
+    throw new ApiError(409, 'A training already exists for this application.');
+  }
 
   const ts = now();
+  if (existing) {
+    const patch = {
+      ...input,
+      startDate: input.joiningDate,
+      status: 'ACTIVE',
+      startedAt: ts,
+      updatedAt: ts,
+    };
+    await Training.updateOne({ id: existing.id }, { $set: patch });
+    const doc = { ...existing, ...patch };
+    await emitEvent('TRAINING_STARTED', doc, actor);
+    await notifyStudent(doc, 'Training Started', `Your training "${doc.trainingModule}" has started.`);
+    emailStudentAboutTraining(doc, 'training_started');
+    return doc;
+  }
+
   const id = genId('TRN');
   const doc = {
     id,
@@ -192,6 +213,70 @@ async function createAndStart(userId, payload, actor) {
   await notifyStudent(doc, 'Training Started', `Your training "${doc.trainingModule}" has started.`);
   emailStudentAboutTraining(doc, 'training_started');
   return doc;
+}
+
+/**
+ * Bulk-assign a mentor to several assigned students at once. For each selected
+ * application (scoped to this coordinator's department) it sets mentorName on the
+ * existing training, or creates a lightweight ASSIGNED training carrying just the
+ * mentor (schedule is filled later via "Assign Mentor & Schedule"). Creating an
+ * ASSIGNED training does NOT advance the application status (the TEC change-stream
+ * only reacts to ACTIVE/COMPLETED).
+ */
+async function assignMentorBulk(userId, payload, actor) {
+  const { keys } = await scope(userId);
+  const mentorName = (typeof payload.mentorName === 'string' ? payload.mentorName.trim() : '');
+  if (!mentorName) throw new ApiError(400, 'Mentor name is required.');
+  if (mentorName.length > 120) throw new ApiError(400, 'Mentor name must be at most 120 characters.');
+  const ids = Array.isArray(payload.applicationIds)
+    ? [...new Set(payload.applicationIds.filter(Boolean).map(String))]
+    : [];
+  if (ids.length === 0) throw new ApiError(400, 'Select at least one student.');
+
+  const apps = await Application.find({
+    $or: [{ id: { $in: ids } }, { applicationId: { $in: ids } }],
+    assignedDepartment: { $in: keys },
+  }).lean();
+  if (apps.length === 0) {
+    throw new ApiError(403, 'None of the selected students are assigned to your department.');
+  }
+
+  const ts = now();
+  let assigned = 0;
+  for (const app of apps) {
+    const appId = app.id || app.applicationId;
+    const existing = await Training.findOne({ applicationId: appId, assignedDepartment: { $in: keys } }).lean();
+    if (existing) {
+      // Don't touch a completed training's mentor.
+      if (String(existing.status || '').toUpperCase() === 'COMPLETED') continue;
+      await Training.updateOne({ id: existing.id }, { $set: { mentorName, updatedAt: ts } });
+    } else {
+      const id = genId('TRN');
+      await Training.create({
+        id,
+        trainingId: id,
+        applicationId: appId,
+        studentId: app.studentId || app.userId || '',
+        assignedDepartment: app.assignedDepartment,
+        mentorName,
+        status: 'ASSIGNED',
+        createdAt: ts,
+        updatedAt: ts,
+      });
+    }
+    assigned += 1;
+  }
+
+  await recordAudit({
+    action: 'MENTOR_ASSIGNED_BULK',
+    userId: actor.userId,
+    userName: actor.userName,
+    entity: 'training',
+    entityId: '',
+    ip: actor.ip,
+    meta: { count: assigned, mentorName },
+  });
+  return { assigned, mentorName };
 }
 
 /** Start a pre-existing (ASSIGNED) training. */
@@ -309,6 +394,7 @@ module.exports = {
   listTrainings,
   getTraining,
   createAndStart,
+  assignMentorBulk,
   startTraining,
   updateSchedule,
   submitEvaluation,

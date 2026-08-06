@@ -6,7 +6,6 @@ export interface StartTrainingPayload {
   studentId: string;
   assignedCellId: 'cse_cell' | 'it_cell' | 'hr_cell' | 'mechanical_cell' | 'civil_cell';
   mentorName: string;
-  companySupervisor: string;
   trainingModule: string;
   reportingLocation: string;
   joiningDate: string;
@@ -46,6 +45,17 @@ const trainingService = {
 
   startTraining: async (payload: StartTrainingPayload): Promise<Training | null> => {
     return api.post<Training>('/trainings', payload);
+  },
+
+  /** Bulk-assign a mentor to several students at once (by application id). */
+  assignMentor: async (
+    applicationIds: string[],
+    mentorName: string,
+  ): Promise<{ assigned: number; mentorName: string }> => {
+    return api.post<{ assigned: number; mentorName: string }>('/trainings/assign-mentor', {
+      applicationIds,
+      mentorName,
+    });
   },
 
   completeTraining: async (trainingId: string): Promise<boolean> => {

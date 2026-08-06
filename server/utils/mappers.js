@@ -67,6 +67,16 @@ function toApplication(app, training) {
     assignedDepartment: app.assignedDepartment || '',
     status: deriveStatus(training, app),
     assignedDate: app.assignedDate || app.appliedDate || app.createdAt || '',
+    // The post the student applied for (for coordinator context).
+    advertisementTitle: app.advertisementTitle || (app.formData && app.formData.position) || '',
+    // The full application form the student submitted to TEC (read-only view).
+    formData: app.formData || null,
+    // The remark TEC gave when assigning this student to the department
+    // (recorded on interview completion / selection-for-training).
+    assignmentRemark:
+      (app.interviewResult && app.interviewResult.remarks) ||
+      (app.roundTwo && app.roundTwo.remarks) ||
+      '',
   };
 }
 

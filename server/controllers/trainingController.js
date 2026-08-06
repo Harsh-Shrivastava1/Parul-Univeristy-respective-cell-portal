@@ -31,6 +31,12 @@ const create = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: toTraining(t) });
 });
 
+// POST /api/trainings/assign-mentor — bulk-assign a mentor to many students
+const assignMentor = asyncHandler(async (req, res) => {
+  const result = await trainingService.assignMentorBulk(req.user.sub, req.body || {}, actorOf(req));
+  res.json({ success: true, data: result });
+});
+
 // PATCH /api/trainings/:id — update mentor/schedule
 const update = asyncHandler(async (req, res) => {
   const t = await trainingService.updateSchedule(req.user.sub, req.params.id, req.body || {}, actorOf(req));
@@ -72,4 +78,4 @@ const downloadAttendance = asyncHandler(async (req, res) => {
   res.send(buffer);
 });
 
-module.exports = { list, listEvaluations, getOne, create, update, start, complete, evaluation, generateAttendance, downloadAttendance };
+module.exports = { list, listEvaluations, getOne, create, assignMentor, update, start, complete, evaluation, generateAttendance, downloadAttendance };
