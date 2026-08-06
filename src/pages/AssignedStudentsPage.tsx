@@ -66,18 +66,27 @@ const AssignedStudentsPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const toggleOne = (appId: string) =>
+  // Mentor assignment only makes sense before training starts — i.e. students
+  // still in ASSIGNED status. Anyone already in/through training (or joined /
+  // completed) is not selectable.
+  const isAssignable = (row: StudentRow) => row.application.status === 'ASSIGNED';
+  const assignableRows = filteredData.filter(isAssignable);
+
+  const toggleOne = (row: StudentRow) => {
+    if (!isAssignable(row)) return;
+    const appId = row.application.applicationId;
     setSelected((prev) => {
       const next = new Set(prev);
       next.has(appId) ? next.delete(appId) : next.add(appId);
       return next;
     });
-  const allVisibleSelected =
-    filteredData.length > 0 && filteredData.every((r) => selected.has(r.application.applicationId));
+  };
+  const allAssignableSelected =
+    assignableRows.length > 0 && assignableRows.every((r) => selected.has(r.application.applicationId));
   const toggleAllVisible = () =>
-    setSelected((prev) => {
-      if (allVisibleSelected) return new Set();
-      return new Set(filteredData.map((r) => r.application.applicationId));
+    setSelected(() => {
+      if (allAssignableSelected) return new Set();
+      return new Set(assignableRows.map((r) => r.application.applicationId));
     });
 
   const submitMentor = async () => {
@@ -199,7 +208,12 @@ const AssignedStudentsPage: React.FC = () => {
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
                   <th className="px-4 py-4 w-10">
-                    <Checkbox checked={allVisibleSelected} onCheckedChange={toggleAllVisible} aria-label="Select all" />
+                    <Checkbox
+                      checked={allAssignableSelected}
+                      onCheckedChange={toggleAllVisible}
+                      disabled={assignableRows.length === 0}
+                      aria-label="Select all assignable students"
+                    />
                   </th>
                   <th className="px-6 py-4 font-semibold">Student</th>
                   <th className="px-6 py-4 font-semibold">Enrollment & Dept</th>
@@ -220,8 +234,10 @@ const AssignedStudentsPage: React.FC = () => {
                     <td className="px-4 py-4">
                       <Checkbox
                         checked={selected.has(row.application.applicationId)}
-                        onCheckedChange={() => toggleOne(row.application.applicationId)}
+                        onCheckedChange={() => toggleOne(row)}
+                        disabled={!isAssignable(row)}
                         aria-label={`Select ${row.student.name}`}
+                        title={isAssignable(row) ? undefined : 'Mentor can only be assigned before training starts'}
                       />
                     </td>
                     <td className="px-6 py-4">
