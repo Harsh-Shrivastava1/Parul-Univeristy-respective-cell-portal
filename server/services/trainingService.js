@@ -279,6 +279,81 @@ async function assignMentorBulk(userId, payload, actor) {
   return { assigned, mentorName };
 }
 
+/**
+ * Bulk-schedule + start training for several ASSIGNED students at once, applying
+ * the SAME schedule (mentor / module / location / dates / duration) to all. Each
+ * selected application (scoped to this department) gets a training created — or a
+ * mentor-only ASSIGNED training upgraded — and moved to ACTIVE. Already-started
+ * or completed trainings are skipped.
+ */
+async function startTrainingBulk(userId, payload, actor) {
+  const { keys } = await scope(userId);
+  const input = validateTrainingInput(payload); // requires mentor/module/location/date/time/duration
+  const ids = Array.isArray(payload.applicationIds)
+    ? [...new Set(payload.applicationIds.filter(Boolean).map(String))]
+    : [];
+  if (ids.length === 0) throw new ApiError(400, 'Select at least one student.');
+
+  const apps = await Application.find({
+    $or: [{ id: { $in: ids } }, { applicationId: { $in: ids } }],
+    assignedDepartment: { $in: keys },
+  }).lean();
+  if (apps.length === 0) {
+    throw new ApiError(403, 'None of the selected students are assigned to your department.');
+  }
+
+  const ts = now();
+  let started = 0;
+  let skipped = 0;
+  for (const app of apps) {
+    const applicationId = app.id || app.applicationId;
+    const studentId = app.studentId || app.userId || '';
+    const existing = await Training.findOne({ applicationId, assignedDepartment: { $in: keys } }).lean();
+    // Only ASSIGNED (or none) can be started; already ACTIVE/COMPLETED are skipped.
+    if (existing && String(existing.status || '').toUpperCase() !== 'ASSIGNED') {
+      skipped += 1;
+      continue;
+    }
+    let doc;
+    if (existing) {
+      const patch = { ...input, startDate: input.joiningDate, status: 'ACTIVE', startedAt: ts, updatedAt: ts };
+      await Training.updateOne({ id: existing.id }, { $set: patch });
+      doc = { ...existing, ...patch };
+    } else {
+      const id = genId('TRN');
+      doc = {
+        id,
+        trainingId: id,
+        applicationId,
+        studentId,
+        assignedDepartment: app.assignedDepartment,
+        ...input,
+        startDate: input.joiningDate,
+        status: 'ACTIVE',
+        startedAt: ts,
+        createdAt: ts,
+        updatedAt: ts,
+      };
+      await Training.create(doc);
+    }
+    await emitEvent('TRAINING_STARTED', doc, actor);
+    await notifyStudent(doc, 'Training Started', `Your training "${doc.trainingModule}" has started.`);
+    emailStudentAboutTraining(doc, 'training_started');
+    started += 1;
+  }
+
+  await recordAudit({
+    action: 'TRAINING_STARTED_BULK',
+    userId: actor.userId,
+    userName: actor.userName,
+    entity: 'training',
+    entityId: '',
+    ip: actor.ip,
+    meta: { started, skipped },
+  });
+  return { started, skipped };
+}
+
 /** Start a pre-existing (ASSIGNED) training. */
 async function startTraining(userId, trainingId, actor) {
   const { keys } = await scope(userId);
@@ -395,6 +470,7 @@ module.exports = {
   getTraining,
   createAndStart,
   assignMentorBulk,
+  startTrainingBulk,
   startTraining,
   updateSchedule,
   submitEvaluation,
