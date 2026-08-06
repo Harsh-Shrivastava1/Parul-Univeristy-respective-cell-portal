@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Search, Filter, Eye, GraduationCap, Building2, UserPlus } from 'lucide-react';
+import { Users, Search, Filter, Eye, GraduationCap, Building2, UserPlus, CalendarCheck } from 'lucide-react';
 import studentService from '@/services/studentService';
 import applicationService from '@/services/applicationService';
 import trainingService from '@/services/trainingService';
@@ -37,6 +37,27 @@ const AssignedStudentsPage: React.FC = () => {
   const [mentorName, setMentorName] = useState('');
   const [mentorBusy, setMentorBusy] = useState(false);
   const [mentorError, setMentorError] = useState<string | null>(null);
+
+  // Bulk schedule + start training
+  const emptySchedule = {
+    mentorName: '',
+    trainingModule: '',
+    reportingLocation: '',
+    joiningDate: new Date().toISOString().split('T')[0],
+    reportingTime: '09:00',
+    duration: 30,
+  };
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [schedule, setSchedule] = useState({ ...emptySchedule });
+  const [scheduleBusy, setScheduleBusy] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const scheduleValid =
+    schedule.mentorName.trim().length >= 2 &&
+    schedule.trainingModule.trim().length >= 2 &&
+    schedule.reportingLocation.trim().length >= 3 &&
+    !!schedule.joiningDate &&
+    !!schedule.reportingTime &&
+    Number(schedule.duration) >= 1;
 
   const fetchData = async () => {
     setLoading(true);
@@ -104,6 +125,31 @@ const AssignedStudentsPage: React.FC = () => {
       setMentorError(e instanceof Error ? e.message : 'Failed to assign mentor.');
     } finally {
       setMentorBusy(false);
+    }
+  };
+
+  const submitSchedule = async () => {
+    const ids = [...selected];
+    if (ids.length === 0 || !scheduleValid) return;
+    setScheduleBusy(true);
+    setScheduleError(null);
+    try {
+      await trainingService.startTrainingBulk(ids, {
+        mentorName: schedule.mentorName.trim(),
+        trainingModule: schedule.trainingModule.trim(),
+        reportingLocation: schedule.reportingLocation.trim(),
+        joiningDate: schedule.joiningDate,
+        reportingTime: schedule.reportingTime,
+        duration: Number(schedule.duration),
+      });
+      setScheduleOpen(false);
+      setSchedule({ ...emptySchedule });
+      setSelected(new Set());
+      await fetchData();
+    } catch (e) {
+      setScheduleError(e instanceof Error ? e.message : 'Failed to schedule training.');
+    } finally {
+      setScheduleBusy(false);
     }
   };
 
@@ -188,8 +234,20 @@ const AssignedStudentsPage: React.FC = () => {
             <Button variant="ghost" size="sm" className="text-slate-600" onClick={() => setSelected(new Set())}>
               Clear
             </Button>
-            <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white" onClick={() => { setMentorError(null); setMentorOpen(true); }}>
+            <Button size="sm" variant="outline" className="gap-2" onClick={() => { setMentorError(null); setMentorOpen(true); }}>
               <UserPlus size={15} /> Assign Mentor
+            </Button>
+            <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
+              setScheduleError(null);
+              // Pre-fill mentor if all selected students already share one.
+              const mentors = new Set(
+                filteredData.filter((r) => selected.has(r.application.applicationId)).map((r) => r.training?.mentorName || ''),
+              );
+              const commonMentor = mentors.size === 1 ? [...mentors][0] : '';
+              setSchedule({ ...emptySchedule, mentorName: commonMentor || '' });
+              setScheduleOpen(true);
+            }}>
+              <CalendarCheck size={15} /> Schedule Training
             </Button>
           </div>
         </div>
@@ -328,6 +386,82 @@ const AssignedStudentsPage: React.FC = () => {
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {mentorBusy ? 'Assigning…' : `Assign to ${selected.size}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk schedule + start training dialog */}
+      <Dialog open={scheduleOpen} onOpenChange={(o) => { if (!o) { setScheduleOpen(false); setScheduleError(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Schedule Training</DialogTitle>
+            <DialogDescription>
+              Apply one schedule to the {selected.size} selected student{selected.size === 1 ? '' : 's'} and start
+              their training. Already-started students are skipped.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Mentor Name *</Label>
+              <Input
+                value={schedule.mentorName}
+                onChange={(e) => setSchedule((s) => ({ ...s, mentorName: e.target.value }))}
+                placeholder="e.g. Prof. Rajesh Kumar"
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Training Module *</Label>
+              <Input
+                value={schedule.trainingModule}
+                onChange={(e) => setSchedule((s) => ({ ...s, trainingModule: e.target.value }))}
+                placeholder="e.g. Full Stack Web Development (MERN)"
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Reporting Location *</Label>
+              <Input
+                value={schedule.reportingLocation}
+                onChange={(e) => setSchedule((s) => ({ ...s, reportingLocation: e.target.value }))}
+                placeholder="e.g. Block A, Room 204"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Joining Date *</Label>
+              <Input
+                type="date"
+                value={schedule.joiningDate}
+                onChange={(e) => setSchedule((s) => ({ ...s, joiningDate: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Reporting Time *</Label>
+              <Input
+                type="time"
+                value={schedule.reportingTime}
+                onChange={(e) => setSchedule((s) => ({ ...s, reportingTime: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Duration (days) *</Label>
+              <Input
+                type="number"
+                min={1}
+                max={104}
+                value={schedule.duration}
+                onChange={(e) => setSchedule((s) => ({ ...s, duration: Number(e.target.value) }))}
+              />
+            </div>
+          </div>
+          {scheduleError && <p className="text-xs text-red-600">{scheduleError}</p>}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setScheduleOpen(false)}>Cancel</Button>
+            <Button
+              onClick={submitSchedule}
+              disabled={scheduleBusy || !scheduleValid || selected.size === 0}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {scheduleBusy ? 'Starting…' : `Start for ${selected.size}`}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -58,6 +58,24 @@ const trainingService = {
     });
   },
 
+  /** Bulk-schedule + start training for several students with one shared schedule. */
+  startTrainingBulk: async (
+    applicationIds: string[],
+    schedule: {
+      mentorName: string;
+      trainingModule: string;
+      reportingLocation: string;
+      joiningDate: string;
+      reportingTime: string;
+      duration: number;
+    },
+  ): Promise<{ started: number; skipped: number }> => {
+    return api.post<{ started: number; skipped: number }>('/trainings/start-bulk', {
+      applicationIds,
+      ...schedule,
+    });
+  },
+
   completeTraining: async (trainingId: string): Promise<boolean> => {
     await api.post(`/trainings/${trainingId}/complete`);
     return true;
