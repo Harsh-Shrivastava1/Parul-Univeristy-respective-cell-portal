@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Search, Filter, Eye, GraduationCap, Building2 } from 'lucide-react';
+import { Users, Search, Filter, Eye, GraduationCap, Building2, UserPlus } from 'lucide-react';
 import studentService from '@/services/studentService';
 import applicationService from '@/services/applicationService';
 import trainingService from '@/services/trainingService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/shared/StatusBadge';
 import type { Student, Application, Training } from '@/types';
@@ -26,32 +31,72 @@ const AssignedStudentsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
+  // Bulk mentor assignment
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [mentorOpen, setMentorOpen] = useState(false);
+  const [mentorName, setMentorName] = useState('');
+  const [mentorBusy, setMentorBusy] = useState(false);
+  const [mentorError, setMentorError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [students, applications, trainings] = await Promise.all([
+        studentService.getStudentsByCell(),
+        applicationService.getApplicationsByCell(),
+        trainingService.getTrainingsByCell()
+      ]);
+
+      const rows = applications.map(app => ({
+        application: app,
+        student: students.find(s => s.studentId === app.studentId) as Student,
+        training: trainings.find(t => t.applicationId === app.applicationId)
+      })).filter(row => row.student);
+
+      setData(rows);
+      setFilteredData(rows);
+    } catch (err) {
+      console.error('Failed to fetch assigned students', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [students, applications, trainings] = await Promise.all([
-          studentService.getStudentsByCell(),
-          applicationService.getApplicationsByCell(),
-          trainingService.getTrainingsByCell()
-        ]);
-
-        const rows = applications.map(app => ({
-          application: app,
-          student: students.find(s => s.studentId === app.studentId) as Student,
-          training: trainings.find(t => t.applicationId === app.applicationId)
-        })).filter(row => row.student);
-
-        setData(rows);
-        setFilteredData(rows);
-      } catch (err) {
-        console.error('Failed to fetch assigned students', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
+
+  const toggleOne = (appId: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(appId) ? next.delete(appId) : next.add(appId);
+      return next;
+    });
+  const allVisibleSelected =
+    filteredData.length > 0 && filteredData.every((r) => selected.has(r.application.applicationId));
+  const toggleAllVisible = () =>
+    setSelected((prev) => {
+      if (allVisibleSelected) return new Set();
+      return new Set(filteredData.map((r) => r.application.applicationId));
+    });
+
+  const submitMentor = async () => {
+    const ids = [...selected];
+    if (ids.length === 0 || mentorName.trim().length < 2) return;
+    setMentorBusy(true);
+    setMentorError(null);
+    try {
+      await trainingService.assignMentor(ids, mentorName.trim());
+      setMentorOpen(false);
+      setMentorName('');
+      setSelected(new Set());
+      await fetchData();
+    } catch (e) {
+      setMentorError(e instanceof Error ? e.message : 'Failed to assign mentor.');
+    } finally {
+      setMentorBusy(false);
+    }
+  };
 
   useEffect(() => {
     let result = data;
@@ -127,6 +172,20 @@ const AssignedStudentsPage: React.FC = () => {
         </div>
       </div>
 
+      {selected.size > 0 ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-blue-200 bg-blue-50/60 px-4 py-3">
+          <span className="text-sm font-semibold text-blue-800">{selected.size} selected</span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="text-slate-600" onClick={() => setSelected(new Set())}>
+              Clear
+            </Button>
+            <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white" onClick={() => { setMentorError(null); setMentorOpen(true); }}>
+              <UserPlus size={15} /> Assign Mentor
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {filteredData.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center justify-center">
@@ -139,6 +198,9 @@ const AssignedStudentsPage: React.FC = () => {
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
+                  <th className="px-4 py-4 w-10">
+                    <Checkbox checked={allVisibleSelected} onCheckedChange={toggleAllVisible} aria-label="Select all" />
+                  </th>
                   <th className="px-6 py-4 font-semibold">Student</th>
                   <th className="px-6 py-4 font-semibold">Enrollment & Dept</th>
                   <th className="px-6 py-4 font-semibold">Company & Mentor</th>
@@ -155,6 +217,13 @@ const AssignedStudentsPage: React.FC = () => {
                     transition={{ duration: 0.2, delay: idx * 0.05 }}
                     className="hover:bg-blue-50/50 transition-colors group"
                   >
+                    <td className="px-4 py-4">
+                      <Checkbox
+                        checked={selected.has(row.application.applicationId)}
+                        onCheckedChange={() => toggleOne(row.application.applicationId)}
+                        aria-label={`Select ${row.student.name}`}
+                      />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -213,6 +282,40 @@ const AssignedStudentsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Bulk mentor assignment dialog */}
+      <Dialog open={mentorOpen} onOpenChange={(o) => { if (!o) { setMentorOpen(false); setMentorError(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Mentor</DialogTitle>
+            <DialogDescription>
+              Assign a mentor to the {selected.size} selected student{selected.size === 1 ? '' : 's'} at once.
+              You can still set the full schedule per student later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="mentor-name">Mentor Name *</Label>
+            <Input
+              id="mentor-name"
+              value={mentorName}
+              onChange={(e) => setMentorName(e.target.value)}
+              placeholder="e.g. Prof. Rajesh Kumar"
+              autoFocus
+            />
+            {mentorError && <p className="text-xs text-red-600">{mentorError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setMentorOpen(false)}>Cancel</Button>
+            <Button
+              onClick={submitMentor}
+              disabled={mentorBusy || mentorName.trim().length < 2 || selected.size === 0}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {mentorBusy ? 'Assigning…' : `Assign to ${selected.size}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };

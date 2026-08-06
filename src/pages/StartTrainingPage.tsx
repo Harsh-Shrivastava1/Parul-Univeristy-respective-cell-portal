@@ -18,7 +18,6 @@ const schema = z.object({
   joiningDate: z.string().min(1, 'Joining date is required'),
   duration: z.coerce.number().min(1, 'Duration must be at least 1 day'),
   mentorName: z.string().min(2, 'Mentor name is required'),
-  companySupervisor: z.string().min(2, 'Company supervisor is required'),
   trainingModule: z.string().min(2, 'Training module is required'),
   reportingTime: z.string().min(1, 'Reporting time is required'),
   reportingLocation: z.string().min(3, 'Location is required'),
@@ -41,7 +40,6 @@ const StartTrainingPage: React.FC = () => {
       joiningDate: new Date().toISOString().split('T')[0],
       duration: 30,
       mentorName: '',
-      companySupervisor: '',
       trainingModule: '',
       reportingTime: '09:00',
       reportingLocation: '',
@@ -100,7 +98,6 @@ const StartTrainingPage: React.FC = () => {
       studentId: student.studentId,
       assignedCellId: session?.cellId as any || 'cse_cell',
       mentorName: data.mentorName,
-      companySupervisor: data.companySupervisor,
       trainingModule: data.trainingModule,
       joiningDate: data.joiningDate,
       reportingTime: data.reportingTime,
@@ -167,14 +164,6 @@ const StartTrainingPage: React.FC = () => {
                 </Label>
                 <Input {...register('mentorName')} placeholder="e.g. Prof. Rajesh Kumar" />
                 {errors.mentorName && <p className="text-xs font-medium text-red-500 mt-1">{errors.mentorName.message}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5 text-slate-600">
-                  <Building2 size={14} /> Company Supervisor
-                </Label>
-                <Input {...register('companySupervisor')} placeholder="e.g. Mr. Anil Mehta" />
-                {errors.companySupervisor && <p className="text-xs font-medium text-red-500 mt-1">{errors.companySupervisor.message}</p>}
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">

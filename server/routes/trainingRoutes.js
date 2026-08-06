@@ -7,6 +7,7 @@ router.use(requireAuth, requireCoordinator);
 
 // Coordinator-owned writes + reads on the trainings collection.
 router.post('/', ctrl.create); // create + start (assign mentor/schedule)
+router.post('/assign-mentor', ctrl.assignMentor); // bulk mentor assignment
 router.get('/:id', ctrl.getOne);
 router.patch('/:id', ctrl.update);
 router.post('/:id/start', ctrl.start);

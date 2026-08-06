@@ -270,6 +270,21 @@ const StudentDetailPage: React.FC = () => {
 
         {/* Right Column - Training & Evaluation Details */}
         <div className="lg:col-span-2 space-y-6">
+          {/* TEC assignment remark — what the Internship Cell noted when routing
+              this student to the department. */}
+          {application.assignmentRemark ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <Card className="shadow-sm border-blue-200 bg-blue-50/40">
+                <CardContent className="p-5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-500 mb-1.5 flex items-center gap-1.5">
+                    <ClipboardList size={14} /> Remark from Internship Cell (TEC)
+                  </h4>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{application.assignmentRemark}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : null}
+
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="shadow-sm border-slate-200 h-full">
               <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
@@ -289,10 +304,6 @@ const StudentDetailPage: React.FC = () => {
                     <div>
                       <h4 className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1.5"><User size={14} /> Mentor Name</h4>
                       <p className="text-sm font-semibold text-slate-900">{training.mentorName}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1.5"><User size={14} /> Company Supervisor</h4>
-                      <p className="text-sm font-semibold text-slate-900">{training.companySupervisor}</p>
                     </div>
                     <div>
                       <h4 className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1.5"><GraduationCap size={14} /> Training Module</h4>
@@ -359,6 +370,88 @@ const StudentDetailPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Submitted application form — the details the student filled and sent to
+          TEC, shown read-only for the coordinator's reference. */}
+      {application.formData ? (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader className="border-b border-slate-100 bg-slate-50/50 pb-4">
+              <CardTitle className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                <ClipboardList size={18} className="text-blue-500" />
+                Submitted Application Form
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {(() => {
+                const fd = application.formData as Record<string, any>;
+                const val = (v: any) => (v === undefined || v === null || v === '' ? '—' : String(v));
+                const rows: [string, any][] = [
+                  ['Full Name', fd.fullName],
+                  ['Enrollment Number', fd.enrollmentNumber],
+                  ['Email', fd.email],
+                  ['Contact', fd.contact],
+                  ['Institute', fd.instituteName],
+                  ['Department', fd.departmentName],
+                  ['Position Applied', fd.position],
+                  ['Semester', fd.semester],
+                  ['CGPA', fd.cgpa],
+                  ['Live Backlogs', fd.backlogs],
+                  ['Attendance', fd.attendance != null && fd.attendance !== '' ? `${fd.attendance}%` : ''],
+                  ['Date of Birth', fd.dateOfBirth],
+                  ['Gender', fd.gender],
+                  ["Father's Name", fd.fatherName],
+                  ["Mother's Name", fd.motherName],
+                  ['Present Address', fd.presentAddress],
+                  ['Permanent Address', fd.permanentAddress],
+                  ['Languages Known', fd.languagesKnown],
+                ];
+                const spi =
+                  fd.spiScores && typeof fd.spiScores === 'object'
+                    ? Object.entries(fd.spiScores as Record<string, unknown>).filter(([, v]) => v !== '' && v != null)
+                    : [];
+                return (
+                  <div className="space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
+                      {rows.map(([label, v]) => (
+                        <div key={label} className="min-w-0">
+                          <p className="text-xs text-slate-500">{label}</p>
+                          <p className="text-sm font-medium text-slate-900 break-words">{val(v)}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {spi.length ? (
+                      <div className="pt-4 border-t border-slate-100">
+                        <p className="text-xs font-semibold text-slate-500 mb-2">SPI (per semester)</p>
+                        <div className="flex flex-wrap gap-2">
+                          {spi.map(([sem, v]) => (
+                            <span key={sem} className="inline-flex items-center gap-1 rounded-md bg-slate-50 border border-slate-100 px-2 py-1 text-xs">
+                              <span className="text-slate-500">{sem.toUpperCase()}</span>
+                              <span className="font-semibold text-slate-900">{String(v)}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {fd.tasksCanPerform ? (
+                      <div className="pt-4 border-t border-slate-100">
+                        <p className="text-xs font-semibold text-slate-500 mb-1">Tasks / Skills</p>
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap">{val(fd.tasksCanPerform)}</p>
+                      </div>
+                    ) : null}
+                    {fd.supportInformation ? (
+                      <div className="pt-4 border-t border-slate-100">
+                        <p className="text-xs font-semibold text-slate-500 mb-1">Supporting Information</p>
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap">{val(fd.supportInformation)}</p>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        </motion.div>
+      ) : null}
     </div>
   );
 };

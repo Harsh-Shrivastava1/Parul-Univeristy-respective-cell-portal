@@ -38,6 +38,12 @@ export interface Application {
   assignedCellId: CellId;
   status: ApplicationStatus;
   assignedDate: string;
+  /** Post the student applied for. */
+  advertisementTitle?: string;
+  /** The full application form the student submitted to TEC (read-only). */
+  formData?: Record<string, unknown> | null;
+  /** Remark TEC gave when assigning this student to the department. */
+  assignmentRemark?: string;
 }
 
 export interface Training {
@@ -46,7 +52,6 @@ export interface Training {
   studentId: string;
   assignedCellId: CellId;
   mentorName: string;
-  companySupervisor: string;
   trainingModule: string;
   reportingLocation: string;
   joiningDate: string;
