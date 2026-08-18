@@ -72,12 +72,20 @@ const downloadTrainingApplication = asyncHandler(async (req, res) => {
   const fromIso = training.joiningDate || training.startDate || '';
   const toIso = addWeeks(fromIso, training.duration);
 
+  const internshipDepartment =
+    (application && application.assignedDepartment) ||
+    (training && training.assignedDepartment) ||
+    (training && training.reportingLocation) ||
+    (application && (application.department || (application.formData && application.formData.departmentName))) ||
+    (training && training.trainingModule) ||
+    'Training Department';
+
   const pdfBytes = await buildTrainingApplicationForm({
     name: (student && (student.studentName || student.name)) || (application && application.studentName) || req.studentAuth.name,
     enrollmentNumber: (student && student.enrollmentNumber) || (application && application.enrollmentNumber),
-    program: (student && student.department) || (application && application.department),
+    program: (student && student.department) || (application && (application.department || (application.formData && application.formData.departmentName))),
     semester: student ? student.semester : '',
-    internshipAt: (application && application.advertisementTitle) || training.trainingModule,
+    internshipAt: internshipDepartment,
     fromDate: fromIso ? fmtDate(fromIso) : '',
     toDate: toIso ? fmtDate(toIso) : '',
   });
