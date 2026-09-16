@@ -30,7 +30,9 @@ const now = () => new Date().toISOString();
  */
 
 const TEC_INBOX = process.env.TEC_NOTIFY_EMAIL || 'collegepurposeparul@gmail.com';
-const REJECTABLE = ['Selected For Training', 'Training In Progress', 'Training Completed'];
+// Every pre-join stage. "Ready To Join" is the window between the offer letter
+// and the student actually joining — still before joining, so still rejectable.
+const REJECTABLE = ['Selected For Training', 'Training In Progress', 'Training Completed', 'Ready To Join'];
 
 async function loadScopedApplication(userId, appId) {
   const { user } = await loadCoordinator(userId);
@@ -243,7 +245,9 @@ const completeInternship = asyncHandler(async (req, res) => {
 
   const data = { name: app.studentName, role: app.advertisementTitle, department: user.department, completedBy: user.department, remarks };
   sendTemplateEmail({ to: app.email, toName: app.studentName, template: 'internship_completed', data }).catch(() => {});
-  sendTemplateEmail({ to: TEC_INBOX, toName: 'Internship Cell', template: 'internship_completed', data: { ...data, name: 'Internship Cell' } }).catch(() => {});
+  // No TEC email here by design: the TEC inbox receives mail only for training
+  // completion, student joined, and reject/terminate alerts (CHANGE_REQUESTS
+  // Part B.7). The in-portal notifyTec() above still records it for TEC.
 
   res.json({ success: true, data: { status: 'Internship Completed' } });
 });

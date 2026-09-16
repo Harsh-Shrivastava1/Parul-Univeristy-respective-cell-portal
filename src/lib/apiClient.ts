@@ -3,7 +3,12 @@
  * Sends the httpOnly JWT session cookie with every request and unwraps the
  * standard { success, data, error } envelope. No business logic lives here.
  */
-const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) || 'http://localhost:5001/api';
+// DEV-ONLY default: Vite bakes this at build time, so a production build with
+// VITE_API_URL unset would otherwise ship a bundle calling the visitor's own
+// machine. Undefined in production makes requests fail loudly instead.
+const API_BASE =
+  (import.meta.env.VITE_API_URL as string | undefined) ||
+  (import.meta.env.DEV ? 'http://localhost:5001/api' : undefined);
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -14,8 +19,14 @@ interface ApiEnvelope<T> {
   message?: string; // some backends (TEC) also send `message`
 }
 
+/** Fail with a clear message rather than requesting "undefined/api/...". */
+function baseUrl(): string {
+  if (!API_BASE) throw new Error('Coordinator backend URL is not configured — set VITE_API_URL.');
+  return API_BASE;
+}
+
 async function request<T>(path: string, method: Method = 'GET', body?: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${baseUrl()}${path}`, {
     method,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },

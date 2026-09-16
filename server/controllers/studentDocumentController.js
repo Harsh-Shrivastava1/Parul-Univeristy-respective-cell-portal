@@ -4,7 +4,7 @@ const Training = require('../models/Training');
 const User = require('../models/User');
 const Student = require('../models/Student');
 const Application = require('../models/Application');
-const { readDocument, buildTrainingApplicationForm, fmtDate } = require('../services/documentService');
+const { readDocument, readAttendanceForm, buildTrainingApplicationForm, fmtDate } = require('../services/documentService');
 
 /** Add N weeks to an ISO date, returning YYYY-MM-DD (or '' if not computable). */
 function addWeeks(iso, weeks) {
@@ -37,7 +37,12 @@ const downloadAttendanceForm = asyncHandler(async (req, res) => {
   const ref = training.attendanceForm;
   if (!ref) throw new ApiError(404, 'Attendance form is not available yet.');
 
-  const buffer = await readDocument(ref);
+  // Self-healing: the PDF is regenerated if its file is missing (see
+  // readAttendanceForm). The student record is only loaded for that path.
+  const student = await Student.findOne({
+    $or: [{ id: training.studentId }, { studentId: training.studentId }],
+  }).lean();
+  const buffer = await readAttendanceForm(ref, training, student);
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${ref.fileName}"`);
   res.send(buffer);

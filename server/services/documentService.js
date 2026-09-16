@@ -9,6 +9,12 @@ const path = require('path');
  */
 const STORAGE_DIR = path.resolve(process.cwd(), 'storage', 'documents');
 
+// All official documents are dated in India Standard Time regardless of the
+// server's own timezone. 'en-IN' controls FORMAT only — without an explicit
+// timeZone a UTC host renders every timestamp after 18:30 IST as the previous
+// day, which would date offer letters and certificates wrongly.
+const IST = 'Asia/Kolkata';
+
 async function ensureDir() {
   await fs.mkdir(STORAGE_DIR, { recursive: true });
 }
@@ -16,7 +22,9 @@ async function ensureDir() {
 function fmtDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
-  return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  return isNaN(d.getTime())
+    ? String(iso)
+    : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', timeZone: IST });
 }
 
 /** Generate + persist the Attendance Form; returns the stored reference. */
@@ -222,4 +230,31 @@ async function readDocument(ref) {
   return fs.readFile(path.join(STORAGE_DIR, ref.storagePath));
 }
 
-module.exports = { generateAttendanceForm, buildTrainingApplicationForm, readDocument, STORAGE_DIR, fmtDate };
+/**
+ * Read a stored attendance form, regenerating it if the file has gone missing.
+ *
+ * Document BYTES live on the local filesystem while the metadata lives in
+ * Mongo, so anything that replaces the filesystem — a redeploy onto fresh
+ * storage, a restore, a moved volume — leaves `training.attendanceForm`
+ * pointing at a file that no longer exists. The form is fully derivable from
+ * the training + student records, so regenerate it rather than serving a 500
+ * to a student trying to print the form they need in order to attend.
+ */
+async function readAttendanceForm(ref, training, student) {
+  try {
+    return await fs.readFile(path.join(STORAGE_DIR, ref.storagePath));
+  } catch (err) {
+    if (!err || err.code !== 'ENOENT') throw err;
+    const fresh = await generateAttendanceForm(training, student, 'system:regenerated');
+    return fs.readFile(path.join(STORAGE_DIR, fresh.storagePath));
+  }
+}
+
+module.exports = {
+  generateAttendanceForm,
+  buildTrainingApplicationForm,
+  readDocument,
+  readAttendanceForm,
+  STORAGE_DIR,
+  fmtDate,
+};

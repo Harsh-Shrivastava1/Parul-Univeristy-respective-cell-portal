@@ -25,6 +25,10 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Coordinators have no self-service reset while logged OUT (an Admin issues a
+  // new password). The control used to be an inert button, so it now explains
+  // the actual recovery route instead of appearing broken.
+  const [showResetHelp, setShowResetHelp] = useState(false);
 
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
@@ -107,7 +111,11 @@ const LoginPage: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Password</Label>
-                  <button type="button" className="text-xs font-semibold text-[#1e5bce] hover:text-blue-700">
+                  <button
+                    type="button"
+                    onClick={() => setShowResetHelp((v) => !v)}
+                    className="text-xs font-semibold text-[#1e5bce] hover:text-blue-700"
+                  >
                     Forgot password?
                   </button>
                 </div>
@@ -130,6 +138,13 @@ const LoginPage: React.FC = () => {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {showResetHelp && (
+                  <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2.5 leading-relaxed">
+                    Ask the Internship Cell administrator to reset your password from the
+                    Admin portal — you will receive the new password by email. Once signed
+                    in you can change it yourself from <span className="font-medium">Change Password</span>.
+                  </p>
+                )}
                 {errors.password && <p className="text-xs font-medium text-red-500 mt-1">{errors.password.message}</p>}
               </div>
 

@@ -150,7 +150,7 @@ const StudentDetailPage: React.FC = () => {
           )}
 
           {/* Department reject — allowed any time BEFORE the student joins. */}
-          {['ASSIGNED', 'TRAINING_ACTIVE', 'TRAINING_COMPLETED'].includes(String(application.status)) && (
+          {['ASSIGNED', 'TRAINING_ACTIVE', 'TRAINING_COMPLETED', 'READY_TO_JOIN'].includes(String(application.status)) && (
             <Button
               variant="outline"
               onClick={() => setActionOpen('reject')}
