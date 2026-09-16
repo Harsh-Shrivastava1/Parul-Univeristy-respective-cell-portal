@@ -33,12 +33,16 @@ function genId() {
  * Append an immutable audit entry to the shared auditLogs collection.
  * Best-effort: an audit failure must never break the primary action.
  */
-async function recordAudit({ action, userId, userName, entity, entityId, ip, meta }) {
+async function recordAudit({ action, userId, userName, role, entity, entityId, ip, meta }) {
   const entry = {
     id: genId(),
     action,
     userId: userId || null,
     userName: userName || null,
+    // The Admin portal shows a Role column for every row in the shared audit
+    // collection, and a row without one rendered as a blank badge.
+    // This portal authenticates department coordinators and nothing else, so that is the default.
+    role: role || 'coordinator',
     entity: entity || 'training',
     entityId: entityId || null,
     ip: ip || null,
