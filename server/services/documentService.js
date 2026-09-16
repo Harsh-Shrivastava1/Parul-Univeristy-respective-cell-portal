@@ -226,8 +226,29 @@ async function buildTrainingApplicationForm(data = {}) {
   return pdf.save();
 }
 
+/**
+ * Resolve a stored document path, confined to STORAGE_DIR.
+ *
+ * `storagePath` comes from the SHARED trainings collection, whose schema is
+ * permissive. No route in this portal writes it from request data today, but a
+ * sibling writer or a migration could, and the student-facing download reaches
+ * this helper — so reduce to a base name and verify containment rather than
+ * trusting the stored value.
+ */
+function resolveStoredPath(storagePath) {
+  const safe = path.basename(String(storagePath || ''));
+  if (!safe || safe === '.' || safe === '..') {
+    throw new Error('Invalid stored document path');
+  }
+  const resolved = path.resolve(STORAGE_DIR, safe);
+  if (resolved !== path.join(STORAGE_DIR, safe)) {
+    throw new Error('Stored document path escapes the storage directory');
+  }
+  return resolved;
+}
+
 async function readDocument(ref) {
-  return fs.readFile(path.join(STORAGE_DIR, ref.storagePath));
+  return fs.readFile(resolveStoredPath(ref.storagePath));
 }
 
 /**
@@ -242,11 +263,11 @@ async function readDocument(ref) {
  */
 async function readAttendanceForm(ref, training, student) {
   try {
-    return await fs.readFile(path.join(STORAGE_DIR, ref.storagePath));
+    return await fs.readFile(resolveStoredPath(ref.storagePath));
   } catch (err) {
     if (!err || err.code !== 'ENOENT') throw err;
     const fresh = await generateAttendanceForm(training, student, 'system:regenerated');
-    return fs.readFile(path.join(STORAGE_DIR, fresh.storagePath));
+    return fs.readFile(resolveStoredPath(fresh.storagePath));
   }
 }
 

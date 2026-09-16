@@ -159,14 +159,25 @@ async function getTraining(userId, trainingId) {
 async function createAndStart(userId, payload, actor) {
   const { keys } = await scope(userId);
   const input = validateTrainingInput(payload);
-  const applicationId = payload.applicationId;
-  const studentId = payload.studentId;
+  // Coerce: the Application model is schemaless, so Mongoose casts nothing and
+  // an object here would be evaluated as a query operator.
+  const applicationId = String(payload.applicationId || '');
+
   if (!applicationId || !studentId) throw new ApiError(400, 'applicationId and studentId are required.');
 
   const app = await Application.findOne({
     $or: [{ id: applicationId }, { applicationId }],
     assignedDepartment: { $in: keys },
   }).lean();
+
+  // Derive the student from the SCOPED application, exactly as the bulk paths
+  // do. This used to come from the request body and was never checked against
+  // the application, so a coordinator could bind a training in their own
+  // department to any student in the system — which reassigned the document
+  // ownership predicate (studentDocumentController keys on training.studentId),
+  // misdirected the lifecycle mail, locked the real applicant out of their own
+  // attendance form, and recorded the wrong student in the audit trail.
+  const studentId = app.studentId || app.userId || '';
   if (!app) throw new ApiError(403, 'This application is not assigned to your cell.');
 
   const existing = await Training.findOne({ applicationId, assignedDepartment: { $in: keys } }).lean();
