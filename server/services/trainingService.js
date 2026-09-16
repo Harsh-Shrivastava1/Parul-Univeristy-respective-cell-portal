@@ -163,12 +163,13 @@ async function createAndStart(userId, payload, actor) {
   // an object here would be evaluated as a query operator.
   const applicationId = String(payload.applicationId || '');
 
-  if (!applicationId || !studentId) throw new ApiError(400, 'applicationId and studentId are required.');
+  if (!applicationId) throw new ApiError(400, 'applicationId is required.');
 
   const app = await Application.findOne({
     $or: [{ id: applicationId }, { applicationId }],
     assignedDepartment: { $in: keys },
   }).lean();
+  if (!app) throw new ApiError(403, 'This application is not assigned to your cell.');
 
   // Derive the student from the SCOPED application, exactly as the bulk paths
   // do. This used to come from the request body and was never checked against
@@ -178,7 +179,6 @@ async function createAndStart(userId, payload, actor) {
   // misdirected the lifecycle mail, locked the real applicant out of their own
   // attendance form, and recorded the wrong student in the audit trail.
   const studentId = app.studentId || app.userId || '';
-  if (!app) throw new ApiError(403, 'This application is not assigned to your cell.');
 
   const existing = await Training.findOne({ applicationId, assignedDepartment: { $in: keys } }).lean();
   // A mentor-only ASSIGNED training (created via bulk mentor assignment) is fine
