@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckCheck, Trash2, Filter } from 'lucide-react';
+import { Bell, CheckCheck, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import notificationService from '@/services/notificationService';
 import { formatDateTime } from '@/lib/utils';
 import type { Notification, NotificationType } from '@/types';
@@ -28,7 +28,9 @@ const typeColors: Record<string, string> = {
 
 const NotificationsPage: React.FC = () => {
   const [filterType, setFilterType] = useState<NotificationType | 'all'>('all');
-  const [unreadOnly, setUnreadOnly] = useState(false);
+  // Default ON, so "Mark All Read" actually clears the page. Switch it off to
+  // look back over what has already been read.
+  const [unreadOnly, setUnreadOnly] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,15 @@ const NotificationsPage: React.FC = () => {
     });
   }, [allNotifications, filterType, unreadOnly]);
 
+  // Page the list rather than rendering every card at once.
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(notifications.length / PAGE_SIZE));
+  // Clamped rather than reset by an effect, so a filter that shrinks the list
+  // never leaves a frame showing an empty page.
+  const safePage = Math.min(page, totalPages);
+  const pageItems = notifications.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   const unreadCount = useMemo(() => allNotifications.filter((n: any) => !n.isRead && !n.read).length, [allNotifications]);
 
   const markRead = async (id: string) => {
@@ -65,10 +76,6 @@ const NotificationsPage: React.FC = () => {
 
   const markAll = async () => {
     await notificationService.markAllAsRead();
-    setRefreshKey(k => k + 1);
-  };
-
-  const deleteN = async (id: string) => {
     setRefreshKey(k => k + 1);
   };
 
@@ -113,8 +120,8 @@ const NotificationsPage: React.FC = () => {
             <Label htmlFor="unread-only" className="text-sm font-medium text-slate-600 cursor-pointer">Unread only</Label>
           </div>
 
-          {(filterType !== 'all' || unreadOnly) && (
-            <Button variant="ghost" size="sm" onClick={() => { setFilterType('all'); setUnreadOnly(false); }} className="text-slate-500 hover:text-slate-900">
+          {(filterType !== 'all' || !unreadOnly) && (
+            <Button variant="ghost" size="sm" onClick={() => { setFilterType('all'); setUnreadOnly(true); }} className="text-slate-500 hover:text-slate-900">
               Clear filters
             </Button>
           )}
@@ -136,7 +143,7 @@ const NotificationsPage: React.FC = () => {
                 </CardContent>
               </Card>
             </motion.div>
-          ) : notifications.map((n: any, i) => (
+          ) : pageItems.map((n: any, i) => (
             <motion.div
               key={n.notificationId || n._id}
               initial={{ opacity: 0, x: -10 }}
@@ -163,9 +170,6 @@ const NotificationsPage: React.FC = () => {
                         <CheckCheck size={16} />
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => deleteN(n.notificationId || n._id)} className="text-slate-400 hover:text-red-600 hover:bg-red-50" title="Delete">
-                      <Trash2 size={16} />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -173,6 +177,39 @@ const NotificationsPage: React.FC = () => {
           ))}
         </AnimatePresence>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm">
+          <p className="text-xs text-slate-500">
+            Showing <span className="font-medium text-slate-900">{((safePage - 1) * PAGE_SIZE) + 1}</span>–
+            <span className="font-medium text-slate-900">{Math.min(safePage * PAGE_SIZE, notifications.length)}</span> of{' '}
+            <span className="font-medium text-slate-900">{notifications.length}</span>
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="w-8 h-8"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+            >
+              <ChevronLeft size={14} />
+            </Button>
+            <span className="px-3 text-xs font-medium text-slate-600">
+              Page {safePage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="w-8 h-8"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+            >
+              <ChevronRight size={14} />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
