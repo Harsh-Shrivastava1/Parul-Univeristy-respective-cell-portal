@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import StatusBadge from '@/components/shared/StatusBadge';
 import type { Student, Application, Training } from '@/types';
+import { applicationHref } from '@/lib/pickApplication';
 
 interface StudentRow {
   student: Student;
@@ -189,7 +190,7 @@ const TrainingCompletionPage: React.FC = () => {
                           variant="ghost"
                           size="sm"
                           className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 font-medium"
-                          onClick={() => navigate(`/students/${row.student.studentId}`)}
+                          onClick={() => navigate(applicationHref(row.student.studentId, row.application.applicationId))}
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
@@ -198,7 +199,7 @@ const TrainingCompletionPage: React.FC = () => {
                           variant="ghost"
                           size="sm"
                           className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 font-medium"
-                          onClick={() => navigate(`/students/${row.student.studentId}/evaluate`)}
+                          onClick={() => navigate(applicationHref(row.student.studentId, row.application.applicationId, '/evaluate'))}
                         >
                           <Star className="w-4 h-4 mr-2" />
                           Evaluation

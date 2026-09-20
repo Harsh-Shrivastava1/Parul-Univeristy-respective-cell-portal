@@ -7,9 +7,14 @@ const evaluationService = {
     return api.get<Evaluation[]>('/me/evaluations');
   },
 
-  getEvaluationByStudent: async (studentId: string): Promise<Evaluation | null> => {
+  /**
+   * A student who trains here twice has two evaluations, so matching on the
+   * student alone returns whichever came back first. Look one up by the
+   * application it belongs to.
+   */
+  getEvaluationByApplication: async (applicationId: string): Promise<Evaluation | null> => {
     const all = await evaluationService.getEvaluationsByCell();
-    return all.find((e) => e.studentId === studentId) || null;
+    return all.find((e) => e.applicationId === applicationId) || null;
   },
 
   submitEvaluation: async (

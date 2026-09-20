@@ -17,6 +17,7 @@ import { formatDate } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Notification, Application, Student, Training, Evaluation } from '@/types';
+import { applicationHref } from '@/lib/pickApplication';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -176,7 +177,7 @@ const DashboardPage: React.FC = () => {
                 <div className="p-8 text-center text-slate-500 text-sm">No recent activity.</div>
               ) : (
                 recentActivity.map((item, i) => (
-                  <div key={i} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => navigate(`/students/${item.student?.studentId}`)}>
+                  <div key={i} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => navigate(applicationHref(item.student?.studentId ?? '', item.app.applicationId))}>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                         {item.student?.avatar ? (

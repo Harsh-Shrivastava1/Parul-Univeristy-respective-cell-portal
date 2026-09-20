@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { pickApplication, applicationHref } from '@/lib/pickApplication';
 
 const schema = z.object({
   joiningDate: z.string().min(1, 'Joining date is required'),
@@ -27,6 +28,9 @@ type FormData = z.infer<typeof schema>;
 
 const StartTrainingPage: React.FC = () => {
   const { studentId } = useParams();
+  const [searchParams] = useSearchParams();
+  // Which of the student's applications this screen is about.
+  const applicationId = searchParams.get('app');
   const navigate = useNavigate();
   const session = useAuthStore(state => state.session);
   const [success, setSuccess] = useState(false);
@@ -53,7 +57,7 @@ const StartTrainingPage: React.FC = () => {
       try {
         const stud = await studentService.getStudentById(studentId);
         const apps = await applicationService.getApplicationsByCell();
-        const app = apps.find(a => a.studentId === studentId) || null;
+        const app = pickApplication(apps, studentId, applicationId);
 
         setStudent(stud);
         setApplication(app);
@@ -71,7 +75,7 @@ const StartTrainingPage: React.FC = () => {
       }
     };
     fetchData();
-  }, [studentId]);
+  }, [studentId, applicationId]);
 
   if (loading) {
     return (
@@ -94,7 +98,7 @@ const StartTrainingPage: React.FC = () => {
     return (
       <div className="text-center py-20">
         <p className="text-slate-500 mb-4">Training can only be assigned for students with ASSIGNED status.</p>
-        <Button onClick={() => navigate(`/students/${studentId}`)}>Back to Profile</Button>
+        <Button onClick={() => navigate(applicationHref(studentId!, application?.applicationId ?? '', ''))}>Back to Profile</Button>
       </div>
     );
   }
@@ -115,7 +119,7 @@ const StartTrainingPage: React.FC = () => {
     await applicationService.updateApplicationStatus(application.applicationId, 'TRAINING_ACTIVE');
     
     setSuccess(true);
-    setTimeout(() => navigate(`/students/${studentId}`), 2000);
+    setTimeout(() => navigate(applicationHref(studentId!, application?.applicationId ?? '', '')), 2000);
   };
 
   if (success) {
@@ -133,7 +137,7 @@ const StartTrainingPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/students/${studentId}`)} className="text-slate-500 hover:text-slate-900 rounded-full">
+        <Button variant="ghost" size="icon" onClick={() => navigate(applicationHref(studentId!, application?.applicationId ?? '', ''))} className="text-slate-500 hover:text-slate-900 rounded-full">
           <ArrowLeft size={20} />
         </Button>
         <div>
@@ -215,7 +219,7 @@ const StartTrainingPage: React.FC = () => {
             </div>
 
             <div className="pt-6 border-t border-slate-100 flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => navigate(`/students/${studentId}`)}>
+              <Button type="button" variant="outline" onClick={() => navigate(applicationHref(studentId!, application?.applicationId ?? '', ''))}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">

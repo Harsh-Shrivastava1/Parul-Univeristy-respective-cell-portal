@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Mail, Phone, MapPin, Building2, GraduationCap,
@@ -19,9 +19,13 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { pickApplication, applicationHref } from '@/lib/pickApplication';
 
 const StudentDetailPage: React.FC = () => {
   const { studentId } = useParams();
+  const [searchParams] = useSearchParams();
+  // Which of the student's applications this screen is about.
+  const applicationId = searchParams.get('app');
   const navigate = useNavigate();
 
   const [student, setStudent] = useState<Student | null>(null);
@@ -68,7 +72,7 @@ const StudentDetailPage: React.FC = () => {
         
         // Find the application for this student in the current cell
         const apps = await applicationService.getApplicationsByCell();
-        const app = apps.find(a => a.studentId === studentId) || null;
+        const app = pickApplication(apps, studentId, applicationId);
         
         if (app) {
           setApplication(app);
@@ -76,7 +80,7 @@ const StudentDetailPage: React.FC = () => {
           setTraining(tr);
           
           if (tr) {
-            const ev = await evaluationService.getEvaluationByStudent(studentId);
+            const ev = await evaluationService.getEvaluationByApplication(app.applicationId);
             setEvaluation(ev);
           }
         }
@@ -88,7 +92,7 @@ const StudentDetailPage: React.FC = () => {
       }
     };
     fetchData();
-  }, [studentId]);
+  }, [studentId, applicationId]);
 
   if (loading) {
     return (
@@ -130,21 +134,21 @@ const StudentDetailPage: React.FC = () => {
           <StatusBadge status={application.status} />
           
           {application.status === 'ASSIGNED' && (
-            <Button onClick={() => navigate(`/students/${studentId}/start-training`)} className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm">
+            <Button onClick={() => navigate(applicationHref(studentId!, application!.applicationId, '/start-training'))} className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-sm">
               <GraduationCap size={16} /> Assign Mentor & Schedule
             </Button>
           )}
           
           {application.status === 'TRAINING_ACTIVE' && (
             <>
-              <Button onClick={() => navigate(`/students/${studentId}/evaluate`)} className="gap-2 bg-amber-500 hover:bg-amber-600 shadow-sm text-white border-0">
+              <Button onClick={() => navigate(applicationHref(studentId!, application!.applicationId, '/evaluate'))} className="gap-2 bg-amber-500 hover:bg-amber-600 shadow-sm text-white border-0">
                 <ClipboardList size={16} /> Submit Evaluation
               </Button>
             </>
           )}
 
           {application.status === 'TRAINING_COMPLETED' && (
-            <Button onClick={() => navigate(`/students/${studentId}/evaluate`)} variant="outline" className="gap-2 bg-white shadow-sm border-slate-200">
+            <Button onClick={() => navigate(applicationHref(studentId!, application!.applicationId, '/evaluate'))} variant="outline" className="gap-2 bg-white shadow-sm border-slate-200">
               <Star size={16} className="text-indigo-600" /> View Evaluation
             </Button>
           )}

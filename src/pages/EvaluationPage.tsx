@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { pickApplication, applicationHref } from '@/lib/pickApplication';
 
 const schema = z.object({
   technicalSkills: z.coerce.number().min(1).max(10),
@@ -28,6 +29,9 @@ type FormData = z.infer<typeof schema>;
 
 const EvaluationPage: React.FC = () => {
   const { studentId } = useParams();
+  const [searchParams] = useSearchParams();
+  // Which of the student's applications this screen is about.
+  const applicationId = searchParams.get('app');
   const navigate = useNavigate();
   const session = useAuthStore(state => state.session);
   const [success, setSuccess] = useState(false);
@@ -55,7 +59,7 @@ const EvaluationPage: React.FC = () => {
       try {
         const stud = await studentService.getStudentById(studentId);
         const apps = await applicationService.getApplicationsByCell();
-        const app = apps.find(a => a.studentId === studentId) || null;
+        const app = pickApplication(apps, studentId, applicationId);
         
         setStudent(stud);
         setApplication(app);
@@ -65,7 +69,7 @@ const EvaluationPage: React.FC = () => {
           setTraining(tr);
 
           if (tr) {
-            const ev = await evaluationService.getEvaluationByStudent(studentId);
+            const ev = await evaluationService.getEvaluationByApplication(app.applicationId);
             setExistingEvaluation(ev);
           }
         }
@@ -76,7 +80,7 @@ const EvaluationPage: React.FC = () => {
       }
     };
     fetchData();
-  }, [studentId]);
+  }, [studentId, applicationId]);
 
   if (loading) {
     return (
@@ -99,7 +103,7 @@ const EvaluationPage: React.FC = () => {
     return (
       <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/students/${studentId}`)} className="text-slate-500 hover:text-slate-900 rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => navigate(applicationHref(studentId!, application?.applicationId ?? '', ''))} className="text-slate-500 hover:text-slate-900 rounded-full">
             <ArrowLeft size={20} />
           </Button>
           <div>
@@ -160,7 +164,7 @@ const EvaluationPage: React.FC = () => {
     await applicationService.updateApplicationStatus(application.applicationId, 'TRAINING_COMPLETED');
     
     setSuccess(true);
-    setTimeout(() => navigate(`/students/${studentId}`), 2500);
+    setTimeout(() => navigate(applicationHref(studentId!, application?.applicationId ?? '', '')), 2500);
   };
 
   if (success) {
@@ -178,7 +182,7 @@ const EvaluationPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/students/${studentId}`)} className="text-slate-500 hover:text-slate-900 rounded-full">
+        <Button variant="ghost" size="icon" onClick={() => navigate(applicationHref(studentId!, application?.applicationId ?? '', ''))} className="text-slate-500 hover:text-slate-900 rounded-full">
           <ArrowLeft size={20} />
         </Button>
         <div>
@@ -249,7 +253,7 @@ const EvaluationPage: React.FC = () => {
             </div>
 
             <div className="pt-6 border-t border-slate-100 flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => navigate(`/students/${studentId}`)}>
+              <Button type="button" variant="outline" onClick={() => navigate(applicationHref(studentId!, application?.applicationId ?? '', ''))}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-sm">
