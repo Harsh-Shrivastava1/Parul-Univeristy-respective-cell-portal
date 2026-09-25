@@ -34,9 +34,13 @@ async function login(identifier, password) {
   if (!identifier || !password) throw new ApiError(400, 'Email and password are required.');
   const id = String(identifier).trim();
 
+    // Prefer a live row: a deleted account keeps its row, so an address reused
+    // after a delete matches two. Without this the deleted one can win and the
+    // replacement account is refused at login.
   const user = await User.findOne({
     role: 'coordinator',
     email: new RegExp(`^${escapeRegex(id)}$`, 'i'),
+    isDeleted: { $ne: true },
   }).lean();
 
   // Uniform error — never reveal which part was wrong.
