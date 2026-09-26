@@ -33,7 +33,7 @@ const StatCard: React.FC<StatCardProps> = ({
       transition={{ delay, duration: 0.3, ease: 'easeOut' }}
       className="h-full"
     >
-      <Card className="hover:shadow-md hover:border-blue-200 transition-all duration-200 h-full">
+      <Card className="transition-all duration-200 h-full">
         <CardContent className="p-5">
           <div className="flex items-start justify-between mb-4">
             <div className={cn("p-3 rounded-xl", colorMap[color])}>

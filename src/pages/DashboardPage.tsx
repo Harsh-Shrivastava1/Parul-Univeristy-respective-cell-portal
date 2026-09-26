@@ -136,8 +136,6 @@ const DashboardPage: React.FC = () => {
           value={stats.totalAssigned}
           icon={<Users size={20} />}
           color="blue"
-          change="+2 this week"
-          positive={true}
         />
         <StatCard
           title="Training In Progress"
