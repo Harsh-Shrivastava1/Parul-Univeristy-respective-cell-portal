@@ -51,6 +51,12 @@ async function login(identifier, password) {
   const ok = await comparePassword(String(password), user.passwordHash);
   if (!ok) throw new ApiError(401, 'Invalid credentials.');
 
+  // Stamp the sign-in for Admin's User Management, which reads this column and
+  // showed "Never" for every coordinator because nothing here wrote it. Same
+  // self-scoped exception as changePassword below: one field, the caller's own
+  // row. `updatedAt` is left alone — signing in is not an edit to the account.
+  await User.updateOne({ id: user.id }, { $set: { lastLoginAt: new Date().toISOString() } });
+
   return toSession(user, null);
 }
 

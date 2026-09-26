@@ -15,6 +15,7 @@ const userSchema = new Schema(
     department: String,
     status: String,
     passwordHash: String,
+    lastLoginAt: String,
   },
   { versionKey: false, strict: false }
 );
