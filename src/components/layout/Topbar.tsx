@@ -54,7 +54,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
 
       {/* Mobile Logo */}
       <div className="lg:hidden flex items-center pr-3 border-r border-slate-200 mr-1">
-        <img src="https://upload.wikimedia.org/wikipedia/en/0/01/Parul_University_logo.svg" alt="Parul University" className="h-6 w-auto object-contain" />
+        <img src="/parul-university-logo.svg" alt="Parul University — NAAC A++" className="h-6 w-auto" />
       </div>
 
       {/* Breadcrumb */}

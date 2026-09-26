@@ -57,8 +57,8 @@ const LoginPage: React.FC = () => {
       <div className="hidden md:flex flex-1 flex-col items-center justify-center p-12 lg:p-20">
         <div className="max-w-md w-full flex flex-col items-center text-center">
           <img
-            src="https://upload.wikimedia.org/wikipedia/en/0/01/Parul_University_logo.svg"
-            alt="Parul University"
+            src="/parul-university-logo.svg"
+            alt="Parul University — NAAC A++"
             className="w-72 h-auto mb-10"
           />
           <h2 className="text-[28px] font-bold text-[#1e5bce] mb-8 tracking-tight">
@@ -76,8 +76,8 @@ const LoginPage: React.FC = () => {
         {/* Mobile Logo Fallback */}
         <div className="md:hidden flex flex-col items-center text-center mb-10">
           <img
-            src="https://upload.wikimedia.org/wikipedia/en/0/01/Parul_University_logo.svg"
-            alt="Parul University"
+            src="/parul-university-logo.svg"
+            alt="Parul University — NAAC A++"
             className="w-56 h-auto mb-6"
           />
           <h2 className="text-2xl font-bold text-[#1e5bce] tracking-tight">Cell Portal</h2>

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, GraduationCap, ClipboardList,
   CheckCircle, Star, Bell, BarChart3, UserCircle, LogOut, ChevronLeft,
-  ChevronRight, Building2, X, KeyRound
+  ChevronRight, X, KeyRound
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import authService from '@/services/authService';
@@ -57,16 +57,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
         collapsed ? 'justify-center' : ''
       )}>
         {collapsed ? (
-          <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <Building2 className="w-5 h-5 text-blue-600" />
-          </div>
+          <img
+            src="/parul-university-icon.svg"
+            alt="Parul University"
+            className="w-9 h-9 rounded-xl ring-1 ring-slate-200 flex-shrink-0"
+          />
         ) : (
           <div className="flex flex-col">
-            <img 
-              src="https://upload.wikimedia.org/wikipedia/en/0/01/Parul_University_logo.svg" 
-              alt="Parul University" 
-              className="w-40 h-auto"
-            />
+            <img src="/parul-university-logo.svg" alt="Parul University — NAAC A++" className="h-8 w-auto" />
           </div>
         )}
       </div>
