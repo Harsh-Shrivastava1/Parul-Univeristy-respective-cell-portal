@@ -174,7 +174,7 @@ const EvaluationPage: React.FC = () => {
           <CheckCircle size={32} className="text-emerald-600" />
         </div>
         <h2 className="text-xl font-bold text-slate-900 mb-2">Training Completed & Evaluated!</h2>
-        <p className="text-slate-500 text-sm">Emails have been sent to TEC and Admin. Redirecting to profile...</p>
+        <p className="text-slate-500 text-sm">Emails have been sent to the Internship Cell and Admin. Redirecting to profile...</p>
       </div>
     );
   }

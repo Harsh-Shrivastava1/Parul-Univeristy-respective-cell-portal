@@ -10,7 +10,7 @@
  */
 
 const BRAND = 'Internship Management System';
-const ORG = 'Parul University · Technical Events Cell';
+const ORG = 'Parul University · Internship Cell';
 const ACCENT = '#4f46e5';
 
 function esc(s) {
@@ -57,7 +57,7 @@ function greeting(data) {
 }
 
 function signoff() {
-  return p(`Warm regards,<br/><strong>Technical Events Cell</strong><br/>Parul University`);
+  return p(`Warm regards,<br/><strong>Internship Cell</strong><br/>Parul University`);
 }
 
 /** Definition-list style table of key/value rows; blank values are skipped. */
@@ -182,7 +182,7 @@ const LIFECYCLE_TEMPLATES = {
         ['Email', d.email],
         ['Temporary Password', d.tempPassword],
       ]) +
-      callout(`If you did not expect this change, contact the Technical Events Cell right away.`, 'warn') +
+      callout(`If you did not expect this change, contact the Internship Cell right away.`, 'warn') +
       button('Sign In', d.loginUrl || d.resetUrl) +
       signoff(),
   }),

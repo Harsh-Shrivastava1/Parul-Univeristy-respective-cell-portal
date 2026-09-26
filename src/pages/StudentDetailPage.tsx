@@ -192,10 +192,10 @@ const StudentDetailPage: React.FC = () => {
             </DialogTitle>
             <DialogDescription>
               {actionOpen === 'terminate'
-                ? 'This permanently closes the internship. The student, TEC and this department are notified.'
+                ? 'This permanently closes the internship. The student, the Internship Cell and this department are notified.'
                 : actionOpen === 'complete'
-                  ? 'Marks the internship as successfully completed. The student and TEC are notified. The certificate is issued physically by the Internship Cell office.'
-                  : 'This closes the application (the student can still apply to other internships). The student and TEC are notified.'}
+                  ? 'Marks the internship as successfully completed. The student and the Internship Cell are notified. The certificate is issued physically by the Internship Cell office.'
+                  : 'This closes the application (the student can still apply to other internships). The student and the Internship Cell are notified.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
@@ -281,7 +281,7 @@ const StudentDetailPage: React.FC = () => {
               <Card className="shadow-sm border-blue-200 bg-blue-50/40">
                 <CardContent className="p-5">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-blue-500 mb-1.5 flex items-center gap-1.5">
-                    <ClipboardList size={14} /> Remark from Internship Cell (TEC)
+                    <ClipboardList size={14} /> Remark from Internship Cell
                   </h4>
                   <p className="text-sm text-slate-700 whitespace-pre-wrap">{application.assignmentRemark}</p>
                 </CardContent>

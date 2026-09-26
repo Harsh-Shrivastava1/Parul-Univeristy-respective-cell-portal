@@ -222,7 +222,7 @@ const AssignedStudentsPage: React.FC = () => {
               <SelectItem value="ASSIGNED">Assigned</SelectItem>
               <SelectItem value="TRAINING_ACTIVE">Training Active</SelectItem>
               <SelectItem value="TRAINING_COMPLETED">Training Completed</SelectItem>
-              <SelectItem value="RETURNED_TO_TEC">Returned to TEC</SelectItem>
+              <SelectItem value="RETURNED_TO_TEC">Returned to Internship Cell</SelectItem>
             </SelectContent>
           </Select>
         </div>
