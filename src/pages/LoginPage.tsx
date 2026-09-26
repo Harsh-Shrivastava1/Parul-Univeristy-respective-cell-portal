@@ -59,7 +59,7 @@ const LoginPage: React.FC = () => {
           <img
             src="/parul-university-logo.svg"
             alt="Parul University — NAAC A++"
-            className="w-72 h-auto mb-10"
+            className="w-[26rem] max-w-full h-auto mb-10"
           />
           <h2 className="text-[28px] font-bold text-[#1e5bce] mb-8 tracking-tight">
             Respective Cell Portal
