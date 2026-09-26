@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
           />
         ) : (
           <div className="flex flex-col">
-            <img src="/parul-university-logo.svg" alt="Parul University — NAAC A++" className="h-8 w-auto" />
+            <img src="/parul-university-logo.svg" alt="Parul University — NAAC A++" className="h-9 w-auto max-w-full" />
           </div>
         )}
       </div>
