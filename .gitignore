@@ -28,7 +28,7 @@ dist-ssr
 .env.*
 !.env.example
 !server/.env.example
-storage/documents/
+server/storage/documents/
 server/node_modules/
 
 # VSCode multi-root workspace files (machine-specific)
