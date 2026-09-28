@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -187,9 +187,16 @@ const LoginPage: React.FC = () => {
         {/* Footer Links */}
         <div className="absolute bottom-8 right-8 hidden md:flex flex-col items-end gap-2 text-[11px] font-semibold text-slate-500">
           <div className="flex gap-6">
-            <a href="#" className="hover:text-slate-900 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Terms</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Help Desk</a>
+            <Link to="/privacy-policy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-slate-900 transition-colors">Terms</Link>
+            <a
+              href="/Parul%20University%20-%20Respective%20Cell%20Portal%20-%20Cell%20Head%20User%20Guide.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-900 transition-colors"
+            >
+              Help Desk
+            </a>
           </div>
           <span className="text-slate-400 font-medium">© 2026 Parul University. All rights reserved.</span>
         </div>

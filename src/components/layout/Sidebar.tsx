@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, GraduationCap, ClipboardList,
   CheckCircle, Star, Bell, BarChart3, UserCircle, LogOut, ChevronLeft,
-  ChevronRight, X, KeyRound
+  ChevronRight, X, KeyRound, BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import authService from '@/services/authService';
@@ -15,12 +15,26 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-const navItems = [
+interface NavLinkItem {
+  path: string;
+  icon: React.ElementType;
+  label: string;
+}
+
+interface NavHrefItem {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+}
+
+type NavItem = NavLinkItem | NavHrefItem;
+
+const navItems: NavItem[] = [
   { path: '/dashboard',          icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/students',           icon: Users,           label: 'Assigned Students' },
-
   { path: '/completion',         icon: ClipboardList,   label: 'Training Completion' },
   { path: '/notifications',      icon: Bell,            label: 'Notifications' },
+  { href: '/Parul%20University%20-%20Respective%20Cell%20Portal%20-%20Cell%20Head%20User%20Guide.pdf', icon: BookOpen, label: 'User Guide' },
   { path: '/profile',            icon: UserCircle,      label: 'Profile' },
   { path: '/change-password',    icon: KeyRound,        label: 'Change Password' },
 ];
@@ -82,6 +96,23 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
       {/* Nav */}
       <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
+          if ('href' in item) {
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onMobileClose}
+                title={collapsed ? item.label : undefined}
+                className={cn('sidebar-link', collapsed && 'justify-center px-2')}
+              >
+                <item.icon size={17} className="flex-shrink-0" />
+                {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+              </a>
+            );
+          }
+
           const active =
             location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path));

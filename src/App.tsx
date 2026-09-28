@@ -15,6 +15,8 @@ const EvaluationPage = lazy(() => import("@/pages/EvaluationPage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const ChangePasswordPage = lazy(() => import("@/pages/ChangePasswordPage"));
+const PrivacyPolicyPage = lazy(() => import("@/pages/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("@/pages/TermsPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-64">
@@ -29,6 +31,8 @@ function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* Protected */}
