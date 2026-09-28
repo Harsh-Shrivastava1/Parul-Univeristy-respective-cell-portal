@@ -72,12 +72,6 @@ const TermsPage: React.FC = () => {
           <p className="text-base text-slate-600 max-w-2xl leading-relaxed">
             Operational guidelines and conditions of use for Cell Heads and Department Coordinators using the Parul University Respective Cell Portal.
           </p>
-          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-500">
-            <span>Portal URL:</span>
-            <span className="font-mono text-slate-700 font-semibold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-              https://coordinator.internship.paruluniversity.ac.in
-            </span>
-          </div>
         </div>
 
         {/* Terms Body */}
