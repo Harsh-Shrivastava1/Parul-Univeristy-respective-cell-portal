@@ -87,7 +87,7 @@ const PrivacyPolicyPage: React.FC = () => {
                 <h2 className="text-xl font-bold">1. Overview and Operational Scope</h2>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                The Parul University Respective Cell Portal is an internal administrative platform dedicated to authorized Cell Heads and Department Coordinators. Its purpose is to facilitate the structured coordination, scheduling, monitoring, and evaluation of university training for students assigned to respective academic departments by the Parul University Internship Cell / Training & Placement Cell.
+                The Parul University Respective Cell Portal is an internal administrative platform dedicated to authorized Cell Heads and Department Coordinators. Its purpose is to facilitate the structured coordination, scheduling, monitoring, and evaluation of university training for students assigned to respective academic departments by the Parul University Internship Cell.
               </p>
               <p className="text-sm text-slate-600 leading-relaxed">
                 This policy outlines how user account information, student records, training documentation, and portal activity are processed within the system to ensure responsible usage and maintain academic integrity.
