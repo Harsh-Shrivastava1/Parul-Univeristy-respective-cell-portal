@@ -1,3 +1,5 @@
+> **Stale reference (written Jul 2026).** Parts of this file no longer match the code. Read `SYSTEM.md` and `AGENTS.md` at the repo root first; where they disagree, the code wins, then `SYSTEM.md`.
+
 # Coordinator Portal — Maintenance Notes
 
 Feature-complete and frozen — bug fixes, dependency updates, and maintenance only.
