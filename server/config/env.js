@@ -48,6 +48,8 @@ const env = {
    * boots. Lifecycle emails are best-effort and never block a business action.
    */
   email: {
+    // Outside production every mail goes here instead (see services/email/transporter.js).
+    devRedirect: (process.env.EMAIL_DEV_REDIRECT || '').trim(),
     host: process.env.SMTP_HOST || '',
     port: parseInt(process.env.SMTP_PORT || '587', 10),
     secure: process.env.SMTP_SECURE === 'true',
