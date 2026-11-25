@@ -64,9 +64,14 @@ npm run build                           # → dist/ (Nginx serves it directly)
   origin for the student routes.
 * **`TEC_NOTIFY_EMAIL`** is mailed only on reject and terminate.
   Complete-internship deliberately sends no Internship Cell mail.
-* **Known issues:**
-  * The SPA never refreshes tokens, so sessions end after 15 min.
-  * `/auth/refresh` doesn't re-check a suspended account.
-  * `models/Cell.js` is unused (legacy).
+* **Session:** `src/lib/apiClient.ts` renews on a 401 and fires
+  `pu:session-expired` when it can't. `src/store/authStore.ts` clears the
+  saved session, and `src/router/ProtectedRoute.tsx` confirms it with
+  `/auth/me` on load and on tab focus. Never trust the localStorage session
+  alone.
+* **Page data:** load it through `src/hooks/useLiveLoad.ts`, not a bare
+  `useEffect`. Otherwise the page never refreshes after other portals change
+  the data.
+* **Known issue:** `models/Cell.js` is unused (legacy).
 * **The attendance-form endpoints exist, but no coordinator page links them**
   (removed from the UI and user guide).

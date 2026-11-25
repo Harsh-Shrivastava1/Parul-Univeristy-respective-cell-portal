@@ -14,7 +14,11 @@ const ApiError = require('./ApiError');
  */
 async function loadCoordinator(userId) {
   const user = await User.findOne({ id: userId, role: 'coordinator' }).lean();
-  if (!user) throw new ApiError(404, 'Coordinator account not found.');
+  // 401 so the SPA signs out: a deleted or deactivated coordinator must lose the
+  // session at the next request, not when the refresh cookie expires.
+  if (!user || user.isDeleted || (user.status && user.status !== 'active')) {
+    throw new ApiError(401, 'Your session has ended. Please sign in again.');
+  }
   return { user, cell: null };
 }
 

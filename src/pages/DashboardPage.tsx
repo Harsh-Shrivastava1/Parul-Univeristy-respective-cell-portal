@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Notification, Application, Student, Training, Evaluation } from '@/types';
 import { applicationHref } from '@/lib/pickApplication';
+import { useLiveLoad } from '@/hooks/useLiveLoad';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,66 +35,62 @@ const DashboardPage: React.FC = () => {
   const [upcomingTrainings, setUpcomingTrainings] = useState<{ training: Training; student: Student | undefined }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [notifs, apps, students, trainings, evaluations] = await Promise.all([
-          notificationService.getNotificationsByCell(),
-          applicationService.getApplicationsByCell(),
-          studentService.getStudentsByCell(),
-          trainingService.getTrainingsByCell(),
-          evaluationService.getEvaluationsByCell()
-        ]);
+  useLiveLoad(async ({ background }) => {
+    if (!background) setLoading(true);
+    try {
+      const [notifs, apps, students, trainings, evaluations] = await Promise.all([
+        notificationService.getNotificationsByCell(),
+        applicationService.getApplicationsByCell(),
+        studentService.getStudentsByCell(),
+        trainingService.getTrainingsByCell(),
+        evaluationService.getEvaluationsByCell()
+      ]);
 
-        const totalAssigned = apps.filter(a => a.status === 'ASSIGNED').length;
-        const activeTraining = trainings.filter(t => t.status === 'ACTIVE').length;
-        
-        // Find completed trainings that do not have an evaluation yet
-        const completedTrainings = trainings.filter(t => t.status === 'COMPLETED');
-        const pendingEvaluations = completedTrainings.filter(t => 
-          !evaluations.find(e => e.trainingId === t.trainingId)
-        ).length;
+      const totalAssigned = apps.filter(a => a.status === 'ASSIGNED').length;
+      const activeTraining = trainings.filter(t => t.status === 'ACTIVE').length;
+      
+      // Find completed trainings that do not have an evaluation yet
+      const completedTrainings = trainings.filter(t => t.status === 'COMPLETED');
+      const pendingEvaluations = completedTrainings.filter(t => 
+        !evaluations.find(e => e.trainingId === t.trainingId)
+      ).length;
 
-        const completed = apps.filter(a => a.status === 'TRAINING_COMPLETED').length;
+      const completed = apps.filter(a => a.status === 'TRAINING_COMPLETED').length;
 
-        setStats({
-          totalAssigned,
-          activeTraining,
-          pendingEvaluations,
-          completed
-        });
+      setStats({
+        totalAssigned,
+        activeTraining,
+        pendingEvaluations,
+        completed
+      });
 
-        // Set recent activity (last 5 assigned students)
-        const recent = apps
-          .sort((a, b) => new Date(b.assignedDate).getTime() - new Date(a.assignedDate).getTime())
-          .slice(0, 5)
-          .map(app => ({
-            app,
-            student: students.find(s => s.studentId === app.studentId)
-          }));
-        setRecentActivity(recent);
+      // Set recent activity (last 5 assigned students)
+      const recent = apps
+        .sort((a, b) => new Date(b.assignedDate).getTime() - new Date(a.assignedDate).getTime())
+        .slice(0, 5)
+        .map(app => ({
+          app,
+          student: students.find(s => s.studentId === app.studentId)
+        }));
+      setRecentActivity(recent);
 
-        // Upcoming Trainings
-        const upcoming = trainings
-          .filter(t => t.status === 'ASSIGNED' || t.status === 'ACTIVE')
-          .sort((a, b) => new Date(a.joiningDate).getTime() - new Date(b.joiningDate).getTime())
-          .slice(0, 5)
-          .map(training => ({
-            training,
-            student: students.find(s => s.studentId === training.studentId)
-          }));
-        setUpcomingTrainings(upcoming);
+      // Upcoming Trainings
+      const upcoming = trainings
+        .filter(t => t.status === 'ASSIGNED' || t.status === 'ACTIVE')
+        .sort((a, b) => new Date(a.joiningDate).getTime() - new Date(b.joiningDate).getTime())
+        .slice(0, 5)
+        .map(training => ({
+          training,
+          student: students.find(s => s.studentId === training.studentId)
+        }));
+      setUpcomingTrainings(upcoming);
 
-        setNotifications(notifs.filter(n => !n.isRead).slice(0, 3));
-      } catch (err) {
-        console.error('Failed to load dashboard data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+      setNotifications(notifs.filter(n => !n.isRead).slice(0, 3));
+    } catch (err) {
+      console.error('Failed to load dashboard data', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   if (loading) {

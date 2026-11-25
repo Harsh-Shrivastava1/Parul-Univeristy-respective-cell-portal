@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Info } from 'lucide-react';
 import authService from '@/services/authService';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +24,12 @@ type FormData = z.infer<typeof schema>;
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Arriving here because the session ran out: say so, once.
+  const [error, setError] = useState<string | null>(() => {
+    if (!useAuthStore.getState().expired) return null;
+    useAuthStore.setState({ expired: false });
+    return 'Your session has ended. Please sign in again.';
+  });
   const [loading, setLoading] = useState(false);
   // Coordinators have no self-service reset while logged OUT (an Admin issues a
   // new password). The control used to be an inert button, so it now explains

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCheck, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import notificationService from '@/services/notificationService';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useLiveLoad } from '@/hooks/useLiveLoad';
 
 const typeLabels: Record<string, string> = {
   NEW_ASSIGNMENT: 'New Assignment',
@@ -35,19 +36,16 @@ const NotificationsPage: React.FC = () => {
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      setLoading(true);
-      try {
-        const notifs = await notificationService.getNotificationsByCell();
-        setAllNotifications(notifs);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchNotifications();
+  useLiveLoad(async ({ background }) => {
+    if (!background) setLoading(true);
+    try {
+      const notifs = await notificationService.getNotificationsByCell();
+      setAllNotifications(notifs);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [refreshKey]);
 
   const notifications = useMemo(() => {

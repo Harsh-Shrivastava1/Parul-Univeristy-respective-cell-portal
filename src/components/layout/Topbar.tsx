@@ -7,6 +7,7 @@ import { getInitials } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useLiveLoad } from '@/hooks/useLiveLoad';
 
 const BREADCRUMBS: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -31,11 +32,10 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
   const session = useAuthStore(state => state.session);
   const [unread, setUnread] = React.useState(0);
 
-  React.useEffect(() => {
-    if (session) {
-      notificationService.getUnreadCount().then(setUnread).catch(console.error);
-    }
-  }, [session]);
+  // Unread badge: refreshed on focus, after any save and by polling.
+  useLiveLoad(async () => {
+    if (session) setUnread(await notificationService.getUnreadCount());
+  }, [session?.userId]);
 
   const pathParts = location.pathname.split('/').filter(Boolean);
   const currentPage = BREADCRUMBS[`/${pathParts[0]}`] || 'Page';

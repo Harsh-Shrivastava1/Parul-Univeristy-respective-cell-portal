@@ -36,9 +36,26 @@ const authService = {
     }
   },
 
-  logout: (): void => {
-    api.post('/auth/logout').catch(() => undefined);
+  logout: async (): Promise<void> => {
+    // Clear the screen first, then end the session on the server so the
+    // refresh cookie cannot sign the coordinator back in.
     useAuthStore.getState().clearSession();
+    await api.post('/auth/logout').catch(() => undefined);
+  },
+
+  /**
+   * Confirms the saved session with the server and refreshes it (department,
+   * name). A dead session fires SESSION_EXPIRED through the API client, which
+   * clears it; a network error keeps it, so a flaky connection does not sign
+   * anyone out.
+   */
+  verifySession: async (): Promise<void> => {
+    try {
+      const fresh = await api.get<AuthSession>('/auth/me');
+      if (useAuthStore.getState().session) useAuthStore.getState().setSession(fresh);
+    } catch {
+      useAuthStore.setState({ verified: true });
+    }
   },
 
   // Self-service password change for the logged-in coordinator. Verifies the

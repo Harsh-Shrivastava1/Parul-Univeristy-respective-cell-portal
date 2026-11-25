@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import StatusBadge from '@/components/shared/StatusBadge';
 import type { Student, Application, Training } from '@/types';
 import { applicationHref } from '@/lib/pickApplication';
+import { useLiveLoad } from '@/hooks/useLiveLoad';
 
 interface StudentRow {
   student: Student;
@@ -60,8 +61,8 @@ const AssignedStudentsPage: React.FC = () => {
     !!schedule.reportingTime &&
     Number(schedule.duration) >= 1;
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async ({ background = false }: { background?: boolean } = {}) => {
+    if (!background) setLoading(true);
     try {
       const [students, applications, trainings] = await Promise.all([
         studentService.getStudentsByCell(),
@@ -84,9 +85,7 @@ const AssignedStudentsPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useLiveLoad(fetchData, []);
 
   // Mentor assignment only makes sense before training starts — i.e. students
   // still in ASSIGNED status. Anyone already in/through training (or joined /

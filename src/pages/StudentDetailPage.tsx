@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -20,6 +20,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { pickApplication, applicationHref } from '@/lib/pickApplication';
+import { useLiveLoad } from '@/hooks/useLiveLoad';
 
 const StudentDetailPage: React.FC = () => {
   const { studentId } = useParams();
@@ -63,35 +64,32 @@ const StudentDetailPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!studentId) return;
-      setLoading(true);
-      try {
-        const stud = await studentService.getStudentById(studentId);
+  useLiveLoad(async ({ background }) => {
+    if (!studentId) return;
+    if (!background) setLoading(true);
+    try {
+      const stud = await studentService.getStudentById(studentId);
+      
+      // Find the application for this student in the current cell
+      const apps = await applicationService.getApplicationsByCell();
+      const app = pickApplication(apps, studentId, applicationId);
+      
+      if (app) {
+        setApplication(app);
+        const tr = await trainingService.getTrainingByApplicationId(app.applicationId);
+        setTraining(tr);
         
-        // Find the application for this student in the current cell
-        const apps = await applicationService.getApplicationsByCell();
-        const app = pickApplication(apps, studentId, applicationId);
-        
-        if (app) {
-          setApplication(app);
-          const tr = await trainingService.getTrainingByApplicationId(app.applicationId);
-          setTraining(tr);
-          
-          if (tr) {
-            const ev = await evaluationService.getEvaluationByApplication(app.applicationId);
-            setEvaluation(ev);
-          }
+        if (tr) {
+          const ev = await evaluationService.getEvaluationByApplication(app.applicationId);
+          setEvaluation(ev);
         }
-        setStudent(stud);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchData();
+      if (stud || !background) setStudent(stud);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [studentId, applicationId]);
 
   if (loading) {

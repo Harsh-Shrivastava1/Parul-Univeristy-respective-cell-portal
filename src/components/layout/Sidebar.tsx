@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useLiveLoad } from '@/hooks/useLiveLoad';
 
 interface NavLinkItem {
   path: string;
@@ -51,15 +52,14 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   const session = useAuthStore(state => state.session);
   const [unread, setUnread] = useState(0);
 
-  React.useEffect(() => {
-    if (session) {
-      notificationService.getUnreadCount().then(setUnread).catch(console.error);
-    }
-  }, [session]);
+  // Unread badge: refreshed on focus, after any save and by polling.
+  useLiveLoad(async () => {
+    if (session) setUnread(await notificationService.getUnreadCount());
+  }, [session?.userId]);
 
-  const handleLogout = () => {
-    authService.logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    await authService.logout();
+    navigate('/login', { replace: true });
   };
 
   const SidebarContent = () => (

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import StatusBadge from '@/components/shared/StatusBadge';
 import type { Student, Application, Training } from '@/types';
 import { applicationHref } from '@/lib/pickApplication';
+import { useLiveLoad } from '@/hooks/useLiveLoad';
 
 interface StudentRow {
   student: Student;
@@ -24,34 +25,31 @@ const TrainingCompletionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [students, applications, trainings] = await Promise.all([
-          studentService.getStudentsByCell(),
-          applicationService.getApplicationsByCell(),
-          trainingService.getTrainingsByCell(),
-        ]);
+  useLiveLoad(async ({ background }) => {
+    if (!background) setLoading(true);
+    try {
+      const [students, applications, trainings] = await Promise.all([
+        studentService.getStudentsByCell(),
+        applicationService.getApplicationsByCell(),
+        trainingService.getTrainingsByCell(),
+      ]);
 
-        const rows = applications
-          .filter(app => app.status === 'TRAINING_COMPLETED')
-          .map(app => ({
-            application: app,
-            student: students.find(s => s.studentId === app.studentId) as Student,
-            training: trainings.find(t => t.applicationId === app.applicationId),
-          }))
-          .filter(row => row.student);
+      const rows = applications
+        .filter(app => app.status === 'TRAINING_COMPLETED')
+        .map(app => ({
+          application: app,
+          student: students.find(s => s.studentId === app.studentId) as Student,
+          training: trainings.find(t => t.applicationId === app.applicationId),
+        }))
+        .filter(row => row.student);
 
-        setData(rows);
-        setFilteredData(rows);
-      } catch (err) {
-        console.error('Failed to fetch training completion data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+      setData(rows);
+      setFilteredData(rows);
+    } catch (err) {
+      console.error('Failed to fetch training completion data', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
