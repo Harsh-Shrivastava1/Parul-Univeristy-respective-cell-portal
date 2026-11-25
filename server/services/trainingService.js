@@ -142,7 +142,8 @@ async function findScopedTraining(keys, trainingId) {
 
 async function listTrainings(userId) {
   const { keys } = await scope(userId);
-  return Training.find({ assignedDepartment: { $in: keys } }).lean();
+  // Trainings detached by an Internship Cell "undo rejection" are history only.
+  return Training.find({ assignedDepartment: { $in: keys }, supersededAt: { $exists: false } }).lean();
 }
 
 async function getTraining(userId, trainingId) {
