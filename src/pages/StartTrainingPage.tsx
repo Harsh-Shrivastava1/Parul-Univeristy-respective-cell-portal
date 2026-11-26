@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { pickApplication, applicationHref } from '@/lib/pickApplication';
 
 const schema = z.object({
-  joiningDate: z.string().min(1, 'Joining date is required'),
+  joiningDate: z.string().min(1, 'Training start date is required'),
   duration: z.coerce.number().min(1, 'Duration must be at least 1 day'),
   mentorName: z.string().min(2, 'Mentor name is required'),
   trainingModule: z.string().min(2, 'Training module is required'),
@@ -187,7 +187,7 @@ const StartTrainingPage: React.FC = () => {
 
               <div className="space-y-1.5">
                 <Label className="flex items-center gap-1.5 text-slate-600">
-                  <CalendarDays size={14} /> Joining Date
+                  <CalendarDays size={14} /> Training Start Date
                 </Label>
                 <Input type="date" {...register('joiningDate')} />
                 {errors.joiningDate && <p className="text-xs font-medium text-red-500 mt-1">{errors.joiningDate.message}</p>}

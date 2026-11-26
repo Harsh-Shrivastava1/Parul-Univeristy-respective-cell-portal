@@ -37,7 +37,7 @@ function validateTrainingInput(body, { partial = false } = {}) {
   set('mentorName', 'Mentor name', MAX.name, true);
   set('trainingModule', 'Training module', MAX.module, true);
   set('reportingLocation', 'Reporting location', MAX.location, true);
-  set('joiningDate', 'Joining date', MAX.time, true);
+  set('joiningDate', 'Training start date', MAX.time, true);
   set('reportingTime', 'Reporting time', MAX.time, true);
   if (b.duration !== undefined) {
     const d = Number(b.duration);

@@ -427,7 +427,7 @@ const AssignedStudentsPage: React.FC = () => {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Joining Date *</Label>
+              <Label>Training Start Date *</Label>
               <Input
                 type="date"
                 value={schedule.joiningDate}

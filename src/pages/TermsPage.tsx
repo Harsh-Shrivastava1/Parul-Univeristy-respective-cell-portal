@@ -165,7 +165,7 @@ const TermsPage: React.FC = () => {
                 <li className="flex items-start gap-2.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
                   <span>
-                    <strong className="text-slate-800">Training Details:</strong> Ensure that mentor names, training modules, reporting locations, reporting times, joining dates, and duration are accurately recorded.
+                    <strong className="text-slate-800">Training Details:</strong> Ensure that mentor names, training modules, reporting locations, reporting times, training start dates, and duration are accurately recorded.
                   </span>
                 </li>
                 <li className="flex items-start gap-2.5">

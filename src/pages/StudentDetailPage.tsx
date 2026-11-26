@@ -316,7 +316,7 @@ const StudentDetailPage: React.FC = () => {
                       <p className="text-sm font-semibold text-slate-900">{training.reportingLocation}</p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1.5"><CalendarCheck size={14} /> Start Date</h4>
+                      <h4 className="text-xs font-medium text-slate-500 mb-1 flex items-center gap-1.5"><CalendarCheck size={14} /> Training Start Date</h4>
                       <p className="text-sm font-semibold text-slate-900">{formatDate(training.joiningDate)}</p>
                     </div>
                     <div>
